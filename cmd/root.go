@@ -11,8 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// TODO: update app name
-const appName = "mf-example"
+const appName = "gov-slack-addon"
 
 var (
 	cfgFile string
@@ -22,8 +21,8 @@ var (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   appName,
-	Short: "TODO",
-	Long:  `TODO is a microservice ...`,
+	Short: "Integrates Governor and Slack",
+	Long:  `gov-slack-addon is a microservice that integrates group/user management in governor with slack groups`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -57,14 +56,12 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".TODO" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigName("." + appName)
 	}
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
-	// TODO: This needs to match [a-z]+, this may not be true for your app name
-	viper.SetEnvPrefix("appname")
+	viper.SetEnvPrefix("gsa")
 
 	viper.AutomaticEnv() // read in environment variables that match
 

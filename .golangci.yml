@@ -1,6 +1,6 @@
 linters-settings:
   goimports:
-    local-prefixes: go.metalkube.net/mf-example-microservice
+    local-prefixes: go.metalkube.net/gov-slack-addon
   gofumpt:
     extra-rules: true
 
