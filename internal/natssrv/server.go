@@ -1,4 +1,4 @@
-package srv
+package natssrv
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -15,6 +16,8 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
+
+	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
 )
 
 // Server implements the HTTP Server
@@ -23,6 +26,8 @@ type Server struct {
 	Listen          string
 	Debug           bool
 	AuditFileWriter io.Writer
+	NATSClient      *NATSClient
+	Reconciler      *reconciler.Reconciler
 }
 
 var (
@@ -102,6 +107,8 @@ func (s *Server) NewServer() *http.Server {
 
 // Run will start the server listening on the specified address
 func (s *Server) Run(ctx context.Context) error {
+	var wg sync.WaitGroup
+
 	httpsrv := s.NewServer()
 
 	go func() {
@@ -110,6 +117,10 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
+	if err := s.registerSubscriptionHandlers(); err != nil {
+		panic(err)
+	}
+
 	<-ctx.Done()
 
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
@@ -117,9 +128,22 @@ func (s *Server) Run(ctx context.Context) error {
 		cancel()
 	}()
 
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		if err := s.shutdownSubscriptions(); err != nil {
+			s.Logger.Warn("error shutting down subscription", zap.Error(err))
+		}
+	}()
+
 	if err := httpsrv.Shutdown(ctxShutDown); err != nil {
 		return err
 	}
+
+	// wait for clean shutdown
+	wg.Wait()
 
 	s.Logger.Info("server shutdown cleanly", zap.String("time", time.Now().UTC().Format(time.RFC3339)))
 

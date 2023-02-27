@@ -3,20 +3,29 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
 
-	"github.com/equinixmetal/mf-example-microservice/srv"
+	"github.com/metal-toolbox/auditevent"
 	audithelpers "github.com/metal-toolbox/auditevent/helpers"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2/clientcredentials"
+
+	governor "go.equinixmetal.net/governor-api/pkg/client"
+	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
+
+	"github.com/equinixmetal/gov-slack-addon/internal/natssrv"
+	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
 )
 
-// serveCmd starts the TODO service
+// serveCmd starts the gov-slack-addon service
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "starts the TODO service",
+	Short: "starts the gov-slack-addon service",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return serve(cmd.Context(), viper.GetViper())
 	},
@@ -28,8 +37,8 @@ func init() {
 	serveCmd.Flags().String("listen", "0.0.0.0:8000", "address to listen on")
 	viperBindFlag("listen", serveCmd.Flags().Lookup("listen"))
 
-	// App specific flags
-	// TODO - add your app specific flags here
+	serveCmd.PersistentFlags().Bool("dry-run", false, "do not make any changes, just log what would be done")
+	viperBindFlag("dryrun", serveCmd.PersistentFlags().Lookup("dry-run"))
 
 	// Tracing Flags
 	serveCmd.Flags().Bool("tracing", false, "enable tracing support")
@@ -43,6 +52,32 @@ func init() {
 
 	serveCmd.Flags().String("audit-log-path", "/app-audit/audit.log", "file path to write audit logs to.")
 	viperBindFlag("audit.log-path", serveCmd.Flags().Lookup("audit-log-path"))
+
+	// Governor related flags
+	serveCmd.Flags().String("governor-url", "https://api.iam.equinixmetal.net", "url of the governor api")
+	viperBindFlag("governor.url", serveCmd.Flags().Lookup("governor-url"))
+	serveCmd.Flags().String("governor-client-id", "gov-slack-addon-governor", "oauth client ID for client credentials flow")
+	viperBindFlag("governor.client-id", serveCmd.Flags().Lookup("governor-client-id"))
+	serveCmd.Flags().String("governor-client-secret", "", "oauth client secret for client credentials flow")
+	viperBindFlag("governor.client-secret", serveCmd.Flags().Lookup("governor-client-secret"))
+	serveCmd.Flags().String("governor-token-url", "http://hydra:4444/oauth2/token", "url used for client credential flow")
+	viperBindFlag("governor.token-url", serveCmd.Flags().Lookup("governor-token-url"))
+	serveCmd.Flags().String("governor-audience", "http://api:3001/", "oauth audience for client credential flow")
+	viperBindFlag("governor.audience", serveCmd.Flags().Lookup("governor-audience"))
+
+	// NATS related flags
+	serveCmd.Flags().String("nats-url", "nats://127.0.0.1:4222", "NATS server connection url")
+	viperBindFlag("nats.url", serveCmd.Flags().Lookup("nats-url"))
+	serveCmd.Flags().String("nats-token", "", "NATS auth token")
+	viperBindFlag("nats.token", serveCmd.Flags().Lookup("nats-token"))
+	serveCmd.Flags().String("nats-nkey", "", "Path to the file containing the NATS nkey keypair")
+	viperBindFlag("nats.nkey", serveCmd.Flags().Lookup("nats-nkey"))
+	serveCmd.Flags().String("nats-subject-prefix", "equinixmetal.governor.events", "prefix for NATS subjects")
+	viperBindFlag("nats.subject-prefix", serveCmd.Flags().Lookup("nats-subject-prefix"))
+	serveCmd.Flags().String("nats-queue-group", "equinixmetal.governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
+	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
+	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint: gomnd
+	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
 }
 
 func serve(cmdCtx context.Context, v *viper.Viper) error {
@@ -76,15 +111,62 @@ func serve(cmdCtx context.Context, v *viper.Viper) error {
 	}
 	defer auf.Close()
 
-	server := &srv.Server{
+	nc, err := newNATSConnection()
+	if err != nil {
+		logger.Fatalw("failed to create NATS client connection", "error", err)
+	}
+
+	natsClient, err := natssrv.NewNATSClient(
+		natssrv.WithNATSLogger(logger.Desugar()),
+		natssrv.WithNATSConn(nc),
+		natssrv.WithNATSPrefix(viper.GetString("nats.subject-prefix")),
+		natssrv.WithNATSSubject(events.GovernorApplicationsEventSubject),
+		natssrv.WithNATSQueueGroup(viper.GetString("nats.queue-group"), viper.GetInt("nats.queue-size")),
+	)
+	if err != nil {
+		logger.Fatalw("failed creating new NATS client", "error", err)
+	}
+
+	gc, err := governor.NewClient(
+		governor.WithLogger(logger.Desugar()),
+		governor.WithURL(viper.GetString("governor.url")),
+		governor.WithClientCredentialConfig(&clientcredentials.Config{
+			ClientID:       viper.GetString("governor.client-id"),
+			ClientSecret:   viper.GetString("governor.client-secret"),
+			TokenURL:       viper.GetString("governor.token-url"),
+			EndpointParams: url.Values{"audience": {viper.GetString("governor.audience")}},
+			Scopes: []string{
+				"read:governor:users",
+				"read:governor:groups",
+				"read:governor:applications",
+			},
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	rec := reconciler.New(
+		reconciler.WithAuditEventWriter(auditevent.NewDefaultAuditEventWriter(auf)),
+		reconciler.WithLogger(logger.Desugar()),
+		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
+		reconciler.WithGovernorClient(gc),
+		reconciler.WithDryRun(viper.GetBool("dryrun")),
+	)
+
+	server := &natssrv.Server{
 		Debug:           viper.GetBool("logging.debug"),
 		Listen:          viper.GetString("listen"),
 		Logger:          logger.Desugar(),
 		AuditFileWriter: auf,
+		NATSClient:      natsClient,
+		Reconciler:      rec,
 	}
 
 	logger.Infow("starting server",
 		"address", viper.GetString("listen"),
+		"governor-url", viper.GetString("governor.url"),
+		"dryrun", viper.GetBool("dryrun"),
 	)
 
 	if err := server.Run(ctx); err != nil {
@@ -94,14 +176,64 @@ func serve(cmdCtx context.Context, v *viper.Viper) error {
 	return nil
 }
 
+// newNATSConnection creates a new NATS connection
+func newNATSConnection() (*nats.Conn, error) {
+	opts := []nats.Option{}
+
+	if viper.GetBool("development") {
+		logger.Debug("enabling development settings")
+
+		opts = append(opts, nats.Token(viper.GetString("nats.token")))
+	} else {
+		opt, err := nats.NkeyOptionFromSeed(viper.GetString("nats-nkey"))
+		if err != nil {
+			return nil, err
+		}
+
+		opts = append(opts, opt)
+	}
+
+	return nats.Connect(
+		viper.GetString("nats-url"),
+		opts...,
+	)
+}
+
 // validateMandatoryFlags collects the mandatory flag validation
 func validateMandatoryFlags() error {
 	errs := []string{}
 
-	// TODO: Example Required Flag
-	// if viper.GetString("app.parameter") == "" {
-	// 	errs = append(errs, ErrParameterRequired.Error())
-	// }
+	if viper.GetString("nats.url") == "" {
+		errs = append(errs, ErrNATSURLRequired.Error())
+	}
+
+	if viper.GetString("nats.token") == "" && viper.GetString("nats.nkey") == "" {
+		errs = append(errs, ErrNATSAuthRequired.Error())
+	}
+
+	if viper.GetString("slack.token") == "" {
+		errs = append(errs, ErrSlackTokenRequired.Error())
+	}
+
+	if viper.GetString("governor.url") == "" {
+		errs = append(errs, ErrGovernorURLRequired.Error())
+	}
+
+	if viper.GetString("governor.client-id") == "" {
+		errs = append(errs, ErrGovernorClientIDRequired.Error())
+	}
+
+	if viper.GetString("governor.client-secret") == "" {
+		errs = append(errs, ErrGovernorClientSecretRequired.Error())
+	}
+
+	if viper.GetString("governor.token-url") == "" {
+		errs = append(errs, ErrGovernorClientTokenURLRequired.Error())
+	}
+
+	if viper.GetString("governor.audience") == "" {
+		errs = append(errs, ErrGovernorClientAudienceRequired.Error())
+	}
 
 	if len(errs) == 0 {
 		return nil

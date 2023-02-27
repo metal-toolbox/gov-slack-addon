@@ -33,7 +33,7 @@ func initTracer(url string) *tracesdk.TracerProvider {
 		// Record information about this application in an Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String("mf-buildkite-addon"),
+			semconv.ServiceNameKey.String("gov-slack-addon"),
 			attribute.String("environment", viper.GetString("tracing.environment")),
 		)),
 	)

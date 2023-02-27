@@ -1,7 +1,7 @@
 // package main is the main package
 package main
 
-import "github.com/equinixmetal/mf-example-microservice/cmd"
+import "github.com/equinixmetal/gov-slack-addon/cmd"
 
 func main() {
 	cmd.Execute()

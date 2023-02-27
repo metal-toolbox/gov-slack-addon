@@ -1,11 +1,6 @@
-# Microservice Template Repo
+# gov-slack-addon
 
-This repo comes pre-populated with the base settings for a new golang microservice:
-
-* Provides a Buildkite pipeline with build, lint, tests, Trivy, and Cosign built-in
-* Base golang http server application with audit + metrics built-in
-* Working Docker compose setup and Makefile
-* golangci lint config
+`gov-slack-addon` is an addon to integrate Slack with Governor.
 
 ## Usage
 

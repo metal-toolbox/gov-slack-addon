@@ -10,12 +10,23 @@ services:
     - --debug
     - --pretty
     - --audit-log-path=/tmp/audit.log
+    environment:
+      GSA_DEVELOPMENT: ${GSA_DEVELOPMENT:-true}
+      GSA_NATS_URL: ${GSA_NATS_URL:-nats://nats-server:4222}
+      GSA_NATS_NKEY: ${GSA_NATS_NKEY:-./nats.nkey}
+      GSA_NATS_TOKEN: topSecret111
+      GSA_GOVERNOR_URL: ${GSA_GOVERNOR_URL:-http://api:3001}
+      GSA_GOVERNOR_CLIENT_ID: ${GSA_GOVERNOR_CLIENT_ID:-gov-slack-addon-governor}
+      GSA_GOVERNOR_AUDIENCE: ${GSA_GOVERNOR_AUDIENCE:-http://api:3001}/}
+      GSA_GOVERNOR_CLIENT_SECRET: ${GSA_GOVERNOR_CLIENT_SECRET}
+      GSA_GOVERNOR_TOKEN_URL: ${GSA_GOVERNOR_TOKEN_URL:-http://hydra:4444/oauth2/token}
     ports:
       - "8000:8000"
     restart: unless-stopped
     depends_on:
       - audit
-
+    networks:
+      - governor_governor
     volumes:
       - type: volume
         source: audit-log
@@ -32,7 +43,9 @@ services:
         read_only: false
     restart: unless-stopped
 
-
 volumes:
   audit-log:
 
+networks:
+  governor_governor:
+    external: true
