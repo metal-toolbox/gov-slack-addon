@@ -22,4 +22,10 @@ var (
 	// ErrGroupMembershipFound is returned when a group membership delete request finds the
 	// user in the governor group
 	ErrGroupMembershipFound = errors.New("delete request user found in group")
+
+	// ErrSlackUserGroupNotFound is returned when the slack user group is not found
+	ErrSlackUserGroupNotFound = errors.New("slack user group not found")
+
+	// ErrSlackWorkspaceNotFound is returned when the slack workspace (team) is not found
+	ErrSlackWorkspaceNotFound = errors.New("slack workspace not found")
 )

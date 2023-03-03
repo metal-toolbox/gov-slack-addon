@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/metal-toolbox/auditevent"
 	audithelpers "github.com/metal-toolbox/auditevent/helpers"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/equinixmetal/gov-slack-addon/internal/natssrv"
 	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
+	"github.com/equinixmetal/gov-slack-addon/internal/slack"
 )
 
 // serveCmd starts the gov-slack-addon service
@@ -52,6 +54,16 @@ func init() {
 
 	serveCmd.Flags().String("audit-log-path", "/app-audit/audit.log", "file path to write audit logs to.")
 	viperBindFlag("audit.log-path", serveCmd.Flags().Lookup("audit-log-path"))
+
+	// Reconciler flags
+	serveCmd.Flags().Duration("reconciler-interval", 1*time.Hour, "interval for the reconciler loop")
+	viperBindFlag("reconciler.interval", serveCmd.Flags().Lookup("reconciler-interval"))
+
+	// Slack related flags
+	serveCmd.Flags().String("slack-token", "", "api token for slack")
+	viperBindFlag("slack.token", serveCmd.Flags().Lookup("slack-token"))
+	serveCmd.Flags().String("slack-usergroup-prefix", "[Governor] ", "string to be prepended to slack usergroup names")
+	viperBindFlag("slack.usergroup-prefix", serveCmd.Flags().Lookup("slack-usergroup-prefix"))
 
 	// Governor related flags
 	serveCmd.Flags().String("governor-url", "https://api.iam.equinixmetal.net", "url of the governor api")
@@ -146,11 +158,18 @@ func serve(cmdCtx context.Context, v *viper.Viper) error {
 		return err
 	}
 
+	sc := slack.NewClient(
+		slack.WithLogger(logger.Desugar()),
+		slack.WithToken(viper.GetString("slack.token")),
+	)
+
 	rec := reconciler.New(
 		reconciler.WithAuditEventWriter(auditevent.NewDefaultAuditEventWriter(auf)),
+		reconciler.WithClient(sc),
+		reconciler.WithGovernorClient(gc),
 		reconciler.WithLogger(logger.Desugar()),
 		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
-		reconciler.WithGovernorClient(gc),
+		reconciler.WithUserGroupPrefix(viper.GetString("slack.usergroup-prefix")),
 		reconciler.WithDryRun(viper.GetBool("dryrun")),
 	)
 
@@ -166,6 +185,7 @@ func serve(cmdCtx context.Context, v *viper.Viper) error {
 	logger.Infow("starting server",
 		"address", viper.GetString("listen"),
 		"governor-url", viper.GetString("governor.url"),
+		"slack-usergroup-prefix", viper.GetString("slack.usergroup-prefix"),
 		"dryrun", viper.GetBool("dryrun"),
 	)
 

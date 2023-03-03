@@ -91,14 +91,6 @@ func (s *Server) registerSubscriptionHandlers() error {
 
 		s.Logger.Debug("added subscriber", zap.String("nats.subscriber_id", fmt.Sprintf("%s-%d", subj, n)))
 
-		// Receive groups channel events
-		subj = fmt.Sprintf("%s.%s", prefix, natsSuffixGroups)
-		if _, err := s.NATSClient.conn.QueueSubscribe(subj, qg, s.GroupsMessageHandler); err != nil {
-			return err
-		}
-
-		s.Logger.Debug("added subscriber", zap.String("nats.subscriber_id", fmt.Sprintf("%s-%d", subj, n)))
-
 		// Receive group memberships channel events
 		subj = fmt.Sprintf("%s.%s", prefix, natsSuffixMembers)
 		if _, err := s.NATSClient.conn.QueueSubscribe(subj, qg, s.MembersMessageHandler); err != nil {
