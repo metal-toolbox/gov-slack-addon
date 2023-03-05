@@ -58,3 +58,7 @@ func NewClient(opts ...Option) *Client {
 
 	return &client
 }
+
+func stringPtr(s string) *string {
+	return &s
+}

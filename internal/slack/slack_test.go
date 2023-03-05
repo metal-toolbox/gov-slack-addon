@@ -4,12 +4,16 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/slack-go/slack"
 	"go.uber.org/zap"
 )
 
-// type mockSlackService struct {
-// 	Error error
-// }
+type mockSlackService struct {
+	Error error
+
+	userResp      *slack.User
+	userGroupResp *slack.UserGroup
+}
 
 func TestNewClient(t *testing.T) {
 	client := NewClient()
