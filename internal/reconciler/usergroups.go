@@ -2,6 +2,7 @@ package reconciler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -178,7 +179,10 @@ func (r *Reconciler) CreateUserGroup(ctx context.Context, groupID, appID string)
 
 	ug, err := r.Client.CreateUserGroup(ctx, teamID, r.userGroupReq(group))
 	if err != nil {
-		logger.Error("failed to create user group", zap.String("slack.usergroup.name", r.userGroupName(group.Name)), zap.Error(err))
+		if !errors.Is(err, slack.ErrSlackGroupAlreadyExists) {
+			logger.Error("failed to create user group", zap.String("slack.usergroup.name", r.userGroupName(group.Name)), zap.Error(err))
+		}
+
 		return err
 	}
 
@@ -218,7 +222,7 @@ func (r *Reconciler) DeleteUserGroup(ctx context.Context, groupID, appID string)
 
 	logger := r.Logger.With(zap.String("slack.workspace.name", workspace), zap.String("governor.app.id", appID))
 
-	group, err := r.GovernorClient.Group(ctx, groupID, false)
+	group, err := r.GovernorClient.Group(ctx, groupID, true)
 	if err != nil {
 		logger.Error("error getting governor group", zap.String("governor.group.id", groupID), zap.Error(err))
 		return err
@@ -459,11 +463,16 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 	for _, m := range memberEmails {
 		u, err := r.Client.GetUserByEmail(ctx, m)
 		if err != nil {
-			logger.Info("didn't find slack user", zap.Error(err))
+			logger.Info("didn't find slack user", zap.String("user.email", m), zap.Error(err))
 			continue
 		}
 
 		newUsers = append(newUsers, u.ID)
+	}
+
+	if equal(ug.Users, newUsers) {
+		logger.Debug("no need to update members", zap.Any("slack.usergroup.existing", ug.Users), zap.Any("slack.usergroup.new", newUsers))
+		return nil
 	}
 
 	logger.Debug("updating user group members", zap.Any("slack.usergroup.existing", ug.Users), zap.Any("slack.usergroup.new", newUsers))
@@ -589,6 +598,27 @@ func contains(list []string, item string) bool {
 	}
 
 	return false
+}
+
+// equal returns true if the two slices have the same elements, regardless of order.
+// We assume the elements in both slices are unique, i.e. no duplicate values.
+func equal(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	exists := make(map[string]bool)
+	for _, value := range a {
+		exists[value] = true
+	}
+
+	for _, value := range b {
+		if !exists[value] {
+			return false
+		}
+	}
+
+	return true
 }
 
 // remove removes the item from the list

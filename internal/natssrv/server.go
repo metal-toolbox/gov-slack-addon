@@ -123,69 +123,6 @@ func (s *Server) Run(ctx context.Context) error {
 		panic(err)
 	}
 
-	// TEST - remove
-	_, err := s.Reconciler.Client.ListWorkspaces(ctx)
-	if err != nil {
-		s.Logger.Error(err.Error())
-	}
-
-	// _, err = s.Reconciler.Client.CreateUserGroup(ctx, "Group from the API", "apigroup1", "Test Group #1", "T04RSB7NSJ1")
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// desc := "Changed this!!!"
-	// hand := "api-group-1"
-	// _, err = s.Reconciler.Client.UpdateUserGroup(ctx, "S04S08DFDDJ", "T04RSB7NSJ1", slack.UserGroupReq{
-	// 	Description: &desc,
-	// 	Handle:      &hand,
-	// })
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// _, err = s.Reconciler.Client.GetUserGroups(ctx, "T04PFBXHFPZ", false)
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// if err := s.Reconciler.CreateUserGroup(ctx, "ad788310-17c3-4759-b6f8-b65991f5785a", "b8afd34d-378e-4de6-944f-04ec3b4da767"); err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// if err := s.Reconciler.DeleteUserGroup(ctx, "ad788310-17c3-4759-b6f8-b65991f5785a", "b8afd34d-378e-4de6-944f-04ec3b4da767"); err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// _, err = s.Reconciler.Client.GetUserGroupMembers(ctx, "S04RBJ53NR4", "T04PFBXHFPZ", false)
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// _, err = s.Reconciler.Client.UpdateUserGroupMembers(ctx, "S04S08DFDDJ", "T04RSB7NSJ1", []string{"U04R2FDHM71"})
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// _, err = s.Reconciler.Client.DisableUserGroup(ctx, "S04S08DFDDJ", "T04RSB7NSJ1")
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
-	// _, err = s.Reconciler.Client.GetUser(ctx, "U04MW61D7FZ")
-	// if err != nil {
-	// 	if errors.Is(err, slack.ErrSlackUserNotFound) {
-	// 		s.Logger.Info("WHOOOOOOOO no such user")
-	// 	} else {
-	// 		s.Logger.Error(err.Error())
-	// 	}
-	// }
-
-	// _, err = s.Reconciler.Client.GetUserByEmail(ctx, "tgrozev@equinix.com")
-	// if err != nil {
-	// 	s.Logger.Error(err.Error())
-	// }
-
 	<-ctx.Done()
 
 	ctxShutDown, cancel := context.WithTimeout(context.Background(), shutdownTimeout)

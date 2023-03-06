@@ -2,6 +2,7 @@ package reconciler
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/metal-toolbox/auditevent"
@@ -110,6 +111,13 @@ func (r *Reconciler) Run(ctx context.Context) {
 		zap.Bool("dryrun", r.dryrun),
 	)
 
+	ws, err := r.Client.ListWorkspaces(ctx)
+	if err != nil {
+		r.Logger.Error(err.Error())
+	} else {
+		r.Logger.Info("slack token has access to the following workspaces", zap.Any("workspaces", ws))
+	}
+
 	for {
 		select {
 		case <-ticker.C:
@@ -133,7 +141,44 @@ func (r *Reconciler) Run(ctx context.Context) {
 				"gov-slack-addon",
 			))
 
-			// TODO: implement reconciler logic
+			apps, err := r.GovernorClient.Applications(ctx)
+			if err != nil {
+				r.Logger.Error("error listing governor applications", zap.Error(err))
+				continue
+			}
+
+			r.Logger.Debug("got applications", zap.Any("applications list", apps))
+
+			// if it's slack application, reconcile all of the groups linked to it
+			for _, app := range apps {
+				if app.Type != applicationTypeFilter {
+					continue
+				}
+
+				groups, err := r.GovernorClient.ApplicationGroups(ctx, app.ID)
+				if err != nil {
+					r.Logger.Error("error listing groups", zap.Error(err))
+					continue
+				}
+
+				r.Logger.Debug("got groups", zap.Any("groups list", groups), zap.String("application", app.Name))
+
+				for _, g := range groups {
+					if err := r.CreateUserGroup(ctx, g.ID, app.ID); err != nil {
+						if !errors.Is(err, slack.ErrSlackGroupAlreadyExists) {
+							r.Logger.Warn("error creating user group", zap.Error(err))
+						}
+					}
+
+					if err := r.UpdateUserGroupMembers(ctx, g.ID, app.ID); err != nil {
+						r.Logger.Warn("error updating user group members", zap.Error(err))
+					}
+				}
+			}
+
+			r.Logger.Info("finished reconciler loop",
+				zap.String("time", time.Now().UTC().Format(time.RFC3339)),
+			)
 
 		case <-ctx.Done():
 			r.Logger.Info("shutting down reconciler",
