@@ -619,6 +619,8 @@ github.com/subosito/gotenv v1.3.0/go.mod h1:YzJjq/33h7nrwdY+iHMhEOEEbW0ovIz0tB6t
 github.com/subosito/gotenv v1.4.1/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
 github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
+github.com/tenyo/slack v0.0.0-20221224054449-a73519980223 h1:l1HSIBnO6dG/MuEnRIEriwZCZT3kBWxWvWj3w5R4auo=
+github.com/tenyo/slack v0.0.0-20221224054449-a73519980223/go.mod h1:hlGi5oXA+Gt+yWTPP0plCdRKmjsDxecdHxYQdlMQKOw=
 github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a h1:w4G20HOGUN3T/22+vyQQ3NHWaOJPujIr4RxQO/eReYw=
 github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a/go.mod h1:hlGi5oXA+Gt+yWTPP0plCdRKmjsDxecdHxYQdlMQKOw=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
