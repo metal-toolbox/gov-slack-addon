@@ -1,24 +1,29 @@
 package reconciler
 
-// // applicationTypeFilter is the name of the governor application type that we use to filter interesting events
-// const applicationTypeFilter = "slack"
+import (
+	"context"
+	"strings"
+)
 
-// // isSlackApplication returns true if the given governor application id is a slack application.
-// // In that case it also returns the application name (which is the Slack organization slug)
-// func (r *Reconciler) isSlackApplication(ctx context.Context, appID string) (bool, string, error) {
-// 	app, err := r.GovernorClient.Application(ctx, appID)
-// 	if err != nil {
-// 		return false, "", err
-// 	}
+// applicationTypeFilter is the name of the governor application type that we use to filter interesting events
+const applicationTypeFilter = "slack"
 
-// 	name := strings.ToLower(app.Slug)
-// 	if name == "" {
-// 		return false, name, ErrAppNameEmpty
-// 	}
+// isSlackApplication returns true if the given governor application id is a slack application.
+// In that case it also returns the application name (which should be the Slack workspace name)
+func (r *Reconciler) isSlackApplication(ctx context.Context, appID string) (bool, string, error) {
+	app, err := r.GovernorClient.Application(ctx, appID)
+	if err != nil {
+		return false, "", err
+	}
 
-// 	if app.Type == applicationTypeFilter {
-// 		return true, name, nil
-// 	}
+	name := strings.ToLower(app.Name)
+	if name == "" {
+		return false, name, ErrAppNameEmpty
+	}
 
-// 	return false, name, nil
-// }
+	if app.Type == applicationTypeFilter {
+		return true, name, nil
+	}
+
+	return false, name, nil
+}

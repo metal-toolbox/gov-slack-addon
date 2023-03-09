@@ -25,7 +25,7 @@ steps:
           parameters:
             GITHUB_TOKEN: /buildkite/github/personal-access-token/v1
       - docker#v5.4.0:
-          image: "golang:1.19"
+          image: "golang:1.20"
           environment:
             - "GOPRIVATE"
             - "GITHUB_TOKEN"
@@ -40,7 +40,7 @@ steps:
           parameters:
             GITHUB_TOKEN: /buildkite/github/personal-access-token/v1
       - docker#v5.4.0:
-          image: "golang:1.19"
+          image: "golang:1.20"
           environment:
             - GOPRIVATE
             - GITHUB_TOKEN

@@ -117,6 +117,8 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
+	go s.Reconciler.Run(ctx)
+
 	if err := s.registerSubscriptionHandlers(); err != nil {
 		panic(err)
 	}
