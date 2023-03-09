@@ -4,6 +4,16 @@ import (
 	"errors"
 )
 
+// list of error messages returned by the slack api
+const (
+	SlackErrorNameAlreadyExists = "name_already_exists"
+	SlackErrorNoSuchSubteam     = "no_such_subteam"
+	SlackErrorSubteamNotFound   = "subteam_not_found"
+	SlackErrorTeamNotFound      = "team_not_found"
+	SlackErrorUserNotFound      = "user_not_found"
+	SlackErrorUsersNotFound     = "users_not_found"
+)
+
 var (
 	// ErrBadParameter is returned when bad parameters are passed to a slack request
 	ErrBadParameter = errors.New("bad parameters in request")

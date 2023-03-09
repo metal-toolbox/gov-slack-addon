@@ -42,7 +42,7 @@ func (c *Client) CreateUserGroup(ctx context.Context, teamID string, userGroup *
 
 	ug, err := c.slackService.CreateUserGroupContext(ctx, ugReq)
 	if err != nil {
-		if err.Error() == "name_already_exists" {
+		if err.Error() == SlackErrorNameAlreadyExists {
 			return nil, ErrSlackGroupAlreadyExists
 		}
 
@@ -69,7 +69,7 @@ func (c *Client) DisableUserGroup(ctx context.Context, groupID, teamID string) (
 
 	ug, err := c.slackService.DisableUserGroupContext(ctx, groupID, opts...)
 	if err != nil {
-		if err.Error() == "no_such_subteam" || err.Error() == "subteam_not_found" {
+		if err.Error() == SlackErrorNoSuchSubteam || err.Error() == SlackErrorSubteamNotFound {
 			return nil, ErrSlackGroupNotFound
 		}
 
@@ -96,7 +96,7 @@ func (c *Client) EnableUserGroup(ctx context.Context, groupID, teamID string) (*
 
 	ug, err := c.slackService.EnableUserGroupContext(ctx, groupID, opts...)
 	if err != nil {
-		if err.Error() == "no_such_subteam" || err.Error() == "subteam_not_found" {
+		if err.Error() == SlackErrorNoSuchSubteam || err.Error() == SlackErrorSubteamNotFound {
 			return nil, ErrSlackGroupNotFound
 		}
 
@@ -125,7 +125,7 @@ func (c *Client) GetUserGroups(ctx context.Context, teamID string, includeDisabl
 
 	groups, err := c.slackService.GetUserGroupsContext(ctx, opts...)
 	if err != nil {
-		if err.Error() == "team_not_found" {
+		if err.Error() == SlackErrorTeamNotFound {
 			return nil, ErrSlackWorkspaceNotFound
 		}
 
@@ -156,7 +156,7 @@ func (c *Client) GetUserGroupMembers(ctx context.Context, groupID, teamID string
 
 	members, err := c.slackService.GetUserGroupMembersContext(ctx, groupID, opts...)
 	if err != nil {
-		if err.Error() == "no_such_subteam" || err.Error() == "subteam_not_found" {
+		if err.Error() == SlackErrorNoSuchSubteam || err.Error() == SlackErrorSubteamNotFound {
 			return nil, ErrSlackGroupNotFound
 		}
 
@@ -237,7 +237,7 @@ func (c *Client) UpdateUserGroupMembers(ctx context.Context, groupID, teamID str
 
 	ug, err := c.slackService.UpdateUserGroupMembersContext(ctx, groupID, m, opts...)
 	if err != nil {
-		if err.Error() == "no_such_subteam" || err.Error() == "subteam_not_found" {
+		if err.Error() == SlackErrorNoSuchSubteam || err.Error() == SlackErrorSubteamNotFound {
 			return nil, ErrSlackGroupNotFound
 		}
 

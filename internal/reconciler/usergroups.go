@@ -51,7 +51,7 @@ func (r *Reconciler) AddUserGroupMember(ctx context.Context, groupID, userID str
 			zap.String("governor.user.id", user.ID),
 		)
 
-		return err
+		return nil
 	}
 
 	if user.Status.String == v1alpha1.UserStatusPending {
@@ -155,7 +155,7 @@ func (r *Reconciler) CreateUserGroup(ctx context.Context, groupID, appID string)
 	}
 
 	if !isSlack {
-		r.Logger.Info("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
+		r.Logger.Debug("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
 		return nil
 	}
 
@@ -216,7 +216,7 @@ func (r *Reconciler) DeleteUserGroup(ctx context.Context, groupID, appID string)
 	}
 
 	if !isSlack {
-		r.Logger.Info("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
+		r.Logger.Debug("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
 		return nil
 	}
 
@@ -320,7 +320,7 @@ func (r *Reconciler) RemoveUserGroupMember(ctx context.Context, groupID, userID 
 			zap.String("governor.user.id", user.ID),
 		)
 
-		return err
+		return nil
 	}
 
 	if user.Status.String == v1alpha1.UserStatusPending {
@@ -422,7 +422,7 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 	}
 
 	if !isSlack {
-		r.Logger.Info("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
+		r.Logger.Debug("not a slack application, skipping", zap.String("governor.app.id", appID), zap.String("governor.app.name", workspace))
 		return nil
 	}
 
