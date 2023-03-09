@@ -632,7 +632,7 @@ func remove(list []string, item string) []string {
 	return list
 }
 
-// timestamp returns the current timestamp in simple format
+// timestamp returns the current timestamp in Unix format
 func timestamp() string {
-	return time.Now().Format("060102150405")
+	return fmt.Sprintf("%d", time.Now().Unix())
 }
