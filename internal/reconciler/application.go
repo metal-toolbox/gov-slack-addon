@@ -2,7 +2,6 @@ package reconciler
 
 import (
 	"context"
-	"strings"
 )
 
 // applicationTypeFilter is the name of the governor application type that we use to filter interesting events
@@ -16,7 +15,7 @@ func (r *Reconciler) isSlackApplication(ctx context.Context, appID string) (bool
 		return false, "", err
 	}
 
-	name := strings.ToLower(app.Name)
+	name := app.Name
 	if name == "" {
 		return false, name, ErrAppNameEmpty
 	}

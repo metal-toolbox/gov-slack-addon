@@ -1,12 +1,130 @@
 package reconciler
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
 
+	"go.equinixmetal.net/governor-api/pkg/api/v1alpha1"
 	"go.uber.org/zap"
 )
+
+// ErrMissingMockedResponse is returned when a mocked response is missing
+var ErrMissingMockedResponse = errors.New("missing mocked response")
+
+type mockGovernorClient struct {
+	err  error
+	resp []byte
+}
+
+func (m mockGovernorClient) Application(ctx context.Context, id string) (*v1alpha1.Application, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := v1alpha1.Application{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+func (m mockGovernorClient) Applications(ctx context.Context) ([]*v1alpha1.Application, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := []*v1alpha1.Application{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (m mockGovernorClient) ApplicationGroups(ctx context.Context, id string) ([]*v1alpha1.Group, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := []*v1alpha1.Group{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (m mockGovernorClient) Group(ctx context.Context, id string, includeMembers bool) (*v1alpha1.Group, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := v1alpha1.Group{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+func (m mockGovernorClient) GroupMembers(ctx context.Context, id string) ([]*v1alpha1.GroupMember, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := []*v1alpha1.GroupMember{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (m mockGovernorClient) User(ctx context.Context, id string, includeGroups bool) (*v1alpha1.User, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := v1alpha1.User{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return &out, nil
+}
+
+func (m mockGovernorClient) URL() string {
+	return "https://governor.example.com"
+}
 
 func TestNew(t *testing.T) {
 	reconciler := New()
