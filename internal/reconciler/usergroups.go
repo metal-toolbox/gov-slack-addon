@@ -126,13 +126,11 @@ func (r *Reconciler) AddUserGroupMember(ctx context.Context, groupID, userID str
 			"slack.workspace.name": workspace,
 			"slack.usergroup.name": ug.Name,
 			"slack.usergroup.id":   ug.ID,
-			"slack.user.email":     user.Email,
 			"slack.user.id":        u.ID,
 			"governor.app.id":      appID,
 			"governor.group.id":    group.ID,
 			"governor.group.slug":  group.Slug,
 			"governor.user.id":     userID,
-			"governor.user.email":  user.Email,
 		}); err != nil {
 			logger.Error("error writing audit event", zap.Error(err))
 		}
@@ -394,13 +392,11 @@ func (r *Reconciler) RemoveUserGroupMember(ctx context.Context, groupID, userID 
 			"slack.workspace.name": workspace,
 			"slack.usergroup.name": ug.Name,
 			"slack.usergroup.id":   ug.ID,
-			"slack.user.email":     user.Email,
 			"slack.user.id":        u.ID,
 			"governor.app.id":      appID,
 			"governor.group.id":    group.ID,
 			"governor.group.slug":  group.Slug,
 			"governor.user.id":     userID,
-			"governor.user.email":  user.Email,
 		}); err != nil {
 			logger.Error("error writing audit event", zap.Error(err))
 		}
@@ -499,7 +495,6 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 		"governor.app.id":      appID,
 		"governor.group.id":    group.ID,
 		"governor.group.slug":  group.Slug,
-		"governor.user.emails": strings.Join(memberEmails, ","),
 	}); err != nil {
 		logger.Error("error writing audit event", zap.Error(err))
 	}
