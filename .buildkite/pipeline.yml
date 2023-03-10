@@ -89,7 +89,7 @@ steps:
           keyless: false
           keyed_config:
             key: "${COSIGN_KEY_PATH}"
-      - equinixmetal-buildkite/trivy#v1.18.0:
+      - equinixmetal-buildkite/trivy#v1.18.1:
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           security-checks: config,secret,vuln
