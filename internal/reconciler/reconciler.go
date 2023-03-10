@@ -8,18 +8,29 @@ import (
 	"github.com/metal-toolbox/auditevent"
 	"go.uber.org/zap"
 
+	"go.equinixmetal.net/governor-api/pkg/api/v1alpha1"
 	governor "go.equinixmetal.net/governor-api/pkg/client"
 
 	"github.com/equinixmetal/gov-slack-addon/internal/auctx"
 	"github.com/equinixmetal/gov-slack-addon/internal/slack"
 )
 
+type govClientIface interface {
+	Application(ctx context.Context, id string) (*v1alpha1.Application, error)
+	Applications(ctx context.Context) ([]*v1alpha1.Application, error)
+	ApplicationGroups(ctx context.Context, id string) ([]*v1alpha1.Group, error)
+	Group(context.Context, string, bool) (*v1alpha1.Group, error)
+	GroupMembers(ctx context.Context, id string) ([]*v1alpha1.GroupMember, error)
+	User(context.Context, string, bool) (*v1alpha1.User, error)
+	URL() string
+}
+
 // Reconciler reconciles with downstream system
 type Reconciler struct {
 	auditEventWriter *auditevent.EventWriter
 	interval         time.Duration
 	Client           *slack.Client
-	GovernorClient   *governor.Client
+	GovernorClient   govClientIface
 	Logger           *zap.Logger
 	queue            string
 	userGroupPrefix  string
