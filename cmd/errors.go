@@ -5,8 +5,8 @@ import "errors"
 var (
 	// ErrNATSURLRequired is returned when a NATS url is missing
 	ErrNATSURLRequired = errors.New("nats url is required and cannot be empty")
-	// ErrNATSAuthRequired is returned when a NATS auth method is missing
-	ErrNATSAuthRequired = errors.New("nats token or nkey auth is required and cannot be empty")
+	// ErrMissingNATSCreds is returned when nats creds are not provided
+	ErrMissingNATSCreds = errors.New("nats creds are required")
 	// ErrGovernorURLRequired is returned when a governor URL is missing
 	ErrGovernorURLRequired = errors.New("governor url is required and cannot be empty")
 	// ErrGovernorClientIDRequired is returned when a governor client id is missing
