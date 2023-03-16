@@ -16,12 +16,31 @@ As a side-note, users in Slack Enterprise Grid exist at the organization level b
 
 ### Pre-requisites for running locally
 
-You can run `gov-slack-addon` against your local Governor instance (if you don't already have one, follow the directions [here](https://github.com/equinixmetal/governor/blob/main/README.md#running-governor-locally).
+Follow the directions [here](https://github.com/equinixmetal/governor/blob/main/README.md#running-governor-locally) for starting the governor-api devcontainer.
 
-The first time you'll need to create a local hydra client for `gov-slack-addon-governor` (you do this where hydra is running, so most likely the governor-api):
+The **first time** you'll need to create a local hydra client for `gov-slack-addon-governor` and copy the nats creds file. After that you can just export the env variables.
 
+First create a local audit log for testing in the `gov-slack-addon` directory:
+
+```sh
+touch audit.log
 ```
+
+#### NATS Creds
+
+Run in the governor-api devcontainer:
+
+```sh
+cat /tmp/user.creds
+```
+
+Then create and copy into `gov-slack-addon/user.local.creds`
+
+#### Hydra
+
+```sh
 export GSA_GOVERNOR_CLIENT_ID="gov-slack-addon-governor"
+# Copy for env variable later
 export GSA_GOVERNOR_CLIENT_SECRET="$(openssl rand -hex 16)"
 echo "${GSA_GOVERNOR_CLIENT_SECRET}"
 
@@ -36,9 +55,11 @@ hydra clients create \
     --scope read:governor:users,read:governor:groups,read:governor:applications
 ```
 
+#### Env
+
 Export the required env variables to point to our local Governor and Hydra:
 
-```
+```sh
 export GSA_GOVERNOR_URL="http://127.0.0.1:3001"
 export GSA_GOVERNOR_AUDIENCE="http://api:3001/"
 export GSA_GOVERNOR_TOKEN_URL="http://127.0.0.1:4444/oauth2/token"
@@ -48,21 +69,27 @@ export GSA_NATS_TOKEN="notused"
 
 Also ensure you have the following secrets exported:
 
-```
+```sh
+# Retrieve from pw vault, look for governor tag
 export GSA_SLACK_TOKEN="REPLACE"
 export GSA_GOVERNOR_CLIENT_SECRET="REPLACE"
 ```
 
-Create a local audit log for testing in the `gov-slack-addon` directory:
+#### Troubleshooting
 
-```
-touch audit.log
-```
+**"error": "Unable to insert or update resource because a resource with that value exists already"**
+
+Run `hydra clients delete gov-slack-addon-governor` in the governor-api devcontainer. Then rerun the steps for hydra.
+
+**"error": "error",**
+**"error_description": "The error is unrecognizable"**
+
+Same as above.
 
 ### Testing addon locally
 
 Start the addon (adjust the flags as needed):
 
-```
-go run . serve --audit-log-path=audit.log --pretty --development --debug --dry-run
+```sh
+go run . serve --audit-log-path=audit.log --pretty --debug --dry-run
 ```
