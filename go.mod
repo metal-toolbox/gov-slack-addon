@@ -8,7 +8,7 @@ require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/gin v1.9.0
-	github.com/metal-toolbox/auditevent v0.6.1
+	github.com/metal-toolbox/auditevent v0.7.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats.go v1.24.0
 	github.com/slack-go/slack v0.12.1
