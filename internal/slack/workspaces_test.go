@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (m *mockSlackService) ListTeamsContext(ctx context.Context, params slack.ListTeamsParameters) ([]slack.Team, string, error) {
+func (m *mockSlackService) ListTeamsContext(_ context.Context, _ slack.ListTeamsParameters) ([]slack.Team, string, error) {
 	if m.Error != nil {
 		return nil, "", m.Error
 	}

@@ -25,28 +25,28 @@ func TestReconciler_isSlackApplication(t *testing.T) {
 		{
 			name:  "slack application lowercase",
 			args:  args{appID: "101-slack"},
-			resp:  []byte(`{"id": "101-slack", "type": "slack", "name": "101-slack", "slug": "101-slack"}`),
+			resp:  []byte(`{"id": "101-slack", "kind": "slack", "name": "101-slack", "slug": "101-slack"}`),
 			want1: true,
 			want2: "101-slack",
 		},
 		{
 			name:  "slack application with uppercase",
 			args:  args{appID: "102-slack"},
-			resp:  []byte(`{"id": "102-slack", "type": "slack", "name": "Test Slack workspace", "slug": "test-slack-workspace"}`),
+			resp:  []byte(`{"id": "102-slack", "kind": "slack", "name": "Test Slack workspace", "slug": "test-slack-workspace"}`),
 			want1: true,
 			want2: "Test Slack workspace",
 		},
 		{
 			name:  "not a slack application",
 			args:  args{appID: "103-github"},
-			resp:  []byte(`{"id": "103-github", "type": "github", "name": "github-org", "slug": "github-org"}`),
+			resp:  []byte(`{"id": "103-github", "kind": "github", "name": "github-org", "slug": "github-org"}`),
 			want1: false,
 			want2: "github-org",
 		},
 		{
 			name:    "empty application name",
 			args:    args{appID: "104-empty"},
-			resp:    []byte(`{"id": "104-empty", "type": "slack", "name": "", "slug": ""}`),
+			resp:    []byte(`{"id": "104-empty", "kind": "slack", "name": "", "slug": ""}`),
 			wantErr: true,
 		},
 		{

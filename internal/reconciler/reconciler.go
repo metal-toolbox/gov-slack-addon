@@ -163,7 +163,7 @@ func (r *Reconciler) Run(ctx context.Context) {
 
 			// if it's slack application, reconcile all of the groups linked to it
 			for _, app := range apps {
-				if app.Type != applicationTypeFilter {
+				if app.Kind != applicationTypeFilter {
 					continue
 				}
 

@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (m *mockSlackService) GetUserInfoContext(ctx context.Context, id string) (*slack.User, error) {
+func (m *mockSlackService) GetUserInfoContext(_ context.Context, id string) (*slack.User, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
@@ -22,7 +22,7 @@ func (m *mockSlackService) GetUserInfoContext(ctx context.Context, id string) (*
 	return m.userResp, nil
 }
 
-func (m *mockSlackService) GetUserByEmailContext(ctx context.Context, id string) (*slack.User, error) {
+func (m *mockSlackService) GetUserByEmailContext(_ context.Context, id string) (*slack.User, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
