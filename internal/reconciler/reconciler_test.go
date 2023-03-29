@@ -20,7 +20,7 @@ type mockGovernorClient struct {
 	resp []byte
 }
 
-func (m mockGovernorClient) Application(ctx context.Context, id string) (*v1alpha1.Application, error) {
+func (m mockGovernorClient) Application(_ context.Context, _ string) (*v1alpha1.Application, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -37,7 +37,7 @@ func (m mockGovernorClient) Application(ctx context.Context, id string) (*v1alph
 	return &out, nil
 }
 
-func (m mockGovernorClient) Applications(ctx context.Context) ([]*v1alpha1.Application, error) {
+func (m mockGovernorClient) Applications(_ context.Context) ([]*v1alpha1.Application, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -54,7 +54,7 @@ func (m mockGovernorClient) Applications(ctx context.Context) ([]*v1alpha1.Appli
 	return out, nil
 }
 
-func (m mockGovernorClient) ApplicationGroups(ctx context.Context, id string) ([]*v1alpha1.Group, error) {
+func (m mockGovernorClient) ApplicationGroups(_ context.Context, _ string) ([]*v1alpha1.Group, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -71,7 +71,7 @@ func (m mockGovernorClient) ApplicationGroups(ctx context.Context, id string) ([
 	return out, nil
 }
 
-func (m mockGovernorClient) Group(ctx context.Context, id string, includeMembers bool) (*v1alpha1.Group, error) {
+func (m mockGovernorClient) Group(_ context.Context, _ string, _ bool) (*v1alpha1.Group, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -88,7 +88,7 @@ func (m mockGovernorClient) Group(ctx context.Context, id string, includeMembers
 	return &out, nil
 }
 
-func (m mockGovernorClient) GroupMembers(ctx context.Context, id string) ([]*v1alpha1.GroupMember, error) {
+func (m mockGovernorClient) GroupMembers(_ context.Context, _ string) ([]*v1alpha1.GroupMember, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -105,7 +105,7 @@ func (m mockGovernorClient) GroupMembers(ctx context.Context, id string) ([]*v1a
 	return out, nil
 }
 
-func (m mockGovernorClient) User(ctx context.Context, id string, includeGroups bool) (*v1alpha1.User, error) {
+func (m mockGovernorClient) User(_ context.Context, _ string, _ bool) (*v1alpha1.User, error) {
 	if m.err != nil {
 		return nil, m.err
 	}

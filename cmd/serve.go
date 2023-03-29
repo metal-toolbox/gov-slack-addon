@@ -90,7 +90,7 @@ func init() {
 	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
 }
 
-func serve(cmdCtx context.Context, v *viper.Viper) error {
+func serve(cmdCtx context.Context, _ *viper.Viper) error {
 	initTracing()
 
 	if err := validateMandatoryFlags(); err != nil {

@@ -20,7 +20,7 @@ func (r *Reconciler) isSlackApplication(ctx context.Context, appID string) (bool
 		return false, name, ErrAppNameEmpty
 	}
 
-	if app.Type == applicationTypeFilter {
+	if app.Kind == applicationTypeFilter {
 		return true, name, nil
 	}
 

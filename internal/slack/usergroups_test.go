@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (m *mockSlackService) CreateUserGroupContext(ctx context.Context, ug slack.UserGroup) (slack.UserGroup, error) {
+func (m *mockSlackService) CreateUserGroupContext(_ context.Context, ug slack.UserGroup) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -29,7 +29,7 @@ func (m *mockSlackService) CreateUserGroupContext(ctx context.Context, ug slack.
 	}, nil
 }
 
-func (m *mockSlackService) DisableUserGroupContext(ctx context.Context, groupID string, opts ...slack.DisableUserGroupOption) (slack.UserGroup, error) {
+func (m *mockSlackService) DisableUserGroupContext(_ context.Context, groupID string, _ ...slack.DisableUserGroupOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -41,7 +41,7 @@ func (m *mockSlackService) DisableUserGroupContext(ctx context.Context, groupID 
 	return *m.userGroupResp, nil
 }
 
-func (m *mockSlackService) EnableUserGroupContext(ctx context.Context, groupID string, opts ...slack.DisableUserGroupOption) (slack.UserGroup, error) {
+func (m *mockSlackService) EnableUserGroupContext(_ context.Context, groupID string, _ ...slack.DisableUserGroupOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -53,7 +53,7 @@ func (m *mockSlackService) EnableUserGroupContext(ctx context.Context, groupID s
 	return *m.userGroupResp, nil
 }
 
-func (m *mockSlackService) GetUserGroupMembersContext(ctx context.Context, groupID string, opts ...slack.GetUserGroupMembersOption) ([]string, error) {
+func (m *mockSlackService) GetUserGroupMembersContext(_ context.Context, groupID string, _ ...slack.GetUserGroupMembersOption) ([]string, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
@@ -65,7 +65,7 @@ func (m *mockSlackService) GetUserGroupMembersContext(ctx context.Context, group
 	return []string{"U0001", "U0002", "U0003"}, nil
 }
 
-func (m *mockSlackService) GetUserGroupsContext(ctx context.Context, opts ...slack.GetUserGroupsOption) ([]slack.UserGroup, error) {
+func (m *mockSlackService) GetUserGroupsContext(_ context.Context, opts ...slack.GetUserGroupsOption) ([]slack.UserGroup, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
@@ -82,7 +82,7 @@ func (m *mockSlackService) GetUserGroupsContext(ctx context.Context, opts ...sla
 	return []slack.UserGroup{*m.userGroupResp}, nil
 }
 
-func (m *mockSlackService) UpdateUserGroupContext(ctx context.Context, groupID string, opts ...slack.UpdateUserGroupsOption) (slack.UserGroup, error) {
+func (m *mockSlackService) UpdateUserGroupContext(_ context.Context, groupID string, opts ...slack.UpdateUserGroupsOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -101,7 +101,7 @@ func (m *mockSlackService) UpdateUserGroupContext(ctx context.Context, groupID s
 	}, nil
 }
 
-func (m *mockSlackService) UpdateUserGroupMembersContext(ctx context.Context, groupID, members string, opts ...slack.UpdateUserGroupMembersOption) (slack.UserGroup, error) {
+func (m *mockSlackService) UpdateUserGroupMembersContext(_ context.Context, groupID, members string, opts ...slack.UpdateUserGroupMembersOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
