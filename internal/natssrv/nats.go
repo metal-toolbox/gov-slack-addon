@@ -5,12 +5,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
-)
 
-const (
-	natsSuffixApps    = "apps"
-	natsSuffixGroups  = "groups"
-	natsSuffixMembers = "members"
+	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
 )
 
 // NATSClient is a NATS client with some configuration
@@ -84,7 +80,7 @@ func (s *Server) registerSubscriptionHandlers() error {
 	n := 1
 	for n < s.NATSClient.queueSize {
 		// Receive application channel events
-		subj := fmt.Sprintf("%s.%s", prefix, natsSuffixApps)
+		subj := fmt.Sprintf("%s.%s", prefix, events.GovernorApplicationLinksEventSubject)
 		if _, err := s.NATSClient.conn.QueueSubscribe(subj, qg, s.ApplicationsMessageHandler); err != nil {
 			return err
 		}
@@ -92,7 +88,7 @@ func (s *Server) registerSubscriptionHandlers() error {
 		s.Logger.Debug("added subscriber", zap.String("nats.subscriber_id", fmt.Sprintf("%s-%d", subj, n)))
 
 		// Receive group memberships channel events
-		subj = fmt.Sprintf("%s.%s", prefix, natsSuffixMembers)
+		subj = fmt.Sprintf("%s.%s", prefix, events.GovernorMembersEventSubject)
 		if _, err := s.NATSClient.conn.QueueSubscribe(subj, qg, s.MembersMessageHandler); err != nil {
 			return err
 		}
