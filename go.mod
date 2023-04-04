@@ -12,12 +12,12 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats.go v1.25.0
 	github.com/slack-go/slack v0.12.1
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
 	github.com/zsais/go-gin-prometheus v0.1.0
-	go.equinixmetal.net/governor-api v0.19.0
+	go.equinixmetal.net/governor-api v0.20.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.40.0
 	go.opentelemetry.io/otel v1.14.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.14.0
@@ -28,7 +28,7 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bytedance/sonic v1.8.6 // indirect
+	github.com/bytedance/sonic v1.8.7 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/cockroachdb/cockroach-go/v2 v2.3.3 // indirect
@@ -39,7 +39,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -97,11 +97,11 @@ require (
 	go.hollow.sh/toolbox v0.5.1 // indirect
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

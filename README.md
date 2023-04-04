@@ -64,7 +64,6 @@ export GSA_GOVERNOR_URL="http://127.0.0.1:3001"
 export GSA_GOVERNOR_AUDIENCE="http://api:3001/"
 export GSA_GOVERNOR_TOKEN_URL="http://127.0.0.1:4444/oauth2/token"
 export GSA_GOVERNOR_CLIENT_ID="gov-slack-addon-governor"
-export GSA_NATS_TOKEN="notused"
 ```
 
 Also ensure you have the following secrets exported:
@@ -91,5 +90,5 @@ Same as above.
 Start the addon (adjust the flags as needed):
 
 ```sh
-go run . serve --audit-log-path=audit.log --pretty --debug --dry-run
+go run . serve --audit-log-path=audit.log --nats-creds-file user.local.creds --pretty --debug --dry-run
 ```

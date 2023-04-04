@@ -31,7 +31,7 @@ func (s *Server) ApplicationsMessageHandler(m *nats.Msg) {
 	switch payload.Action {
 	case v1alpha1.GovernorEventCreate:
 		// when a group is linked to a slack app, we'll create the group in slack and set the members
-		logger.Info("create application event")
+		logger.Info("create application link event")
 
 		ctx = auctx.WithAuditEvent(ctx, s.auditEventNATS(m.Subject, payload))
 
@@ -47,7 +47,7 @@ func (s *Server) ApplicationsMessageHandler(m *nats.Msg) {
 
 	case v1alpha1.GovernorEventDelete:
 		// when a group is unlinked from a slack app, we'll delete/disable the group in slack
-		logger.Info("delete application event")
+		logger.Info("delete application link event")
 
 		ctx = auctx.WithAuditEvent(ctx, s.auditEventNATS(m.Subject, payload))
 
