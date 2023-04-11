@@ -461,13 +461,13 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 		if err != nil {
 			logger.Info("didn't find slack user", zap.String("user.email", m), zap.Error(err))
 
-			// if user is not found (404 error) continue
-			// otherwise, exit out to prevent deleting valid users
-			if errors.Is(err, slack.ErrSlackUserNotFound) {
-				continue
+			// exit out to prevent deleting valid users
+			// only continue if user is not found (404 error)
+			if !errors.Is(err, slack.ErrSlackUserNotFound) {
+				return err
 			}
 
-			return err
+			continue
 		}
 
 		newUsers = append(newUsers, u.ID)
