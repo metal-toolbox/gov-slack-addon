@@ -22,7 +22,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*slack.User, error) {
 	err := retry.Do(
 		func() error {
 			var err error
-			user, err := c.slackService.GetUserInfoContext(ctx, id)
+			user, err = c.slackService.GetUserInfoContext(ctx, id)
 			return err
 		},
 		retry.Attempts(retryAttempts),
