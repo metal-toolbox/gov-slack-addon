@@ -16,9 +16,9 @@ type Client struct {
 }
 
 const (
-	// default number of retry requests on GitHub requests
+	// default number of retry requests on Slack requests
 	retryAttempts = 3
-	// default delay before retry on GitHub requests
+	// default delay before retry on Slack requests
 	retryDelay = 5 * time.Second
 )
 

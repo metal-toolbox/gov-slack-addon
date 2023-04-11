@@ -465,9 +465,9 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 			// otherwise, exit out to prevent deleting valid users
 			if err == slack.ErrSlackUserNotFound {
 				continue
-			} else {
-				return err
 			}
+
+			return err
 		}
 
 		newUsers = append(newUsers, u.ID)
