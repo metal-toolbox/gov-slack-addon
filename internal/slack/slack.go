@@ -2,6 +2,7 @@ package slack
 
 import (
 	"context"
+	"time"
 
 	"github.com/slack-go/slack"
 	"go.uber.org/zap"
@@ -13,6 +14,13 @@ type Client struct {
 	token        string
 	slackService slackService
 }
+
+const (
+	// default number of retry requests on Slack requests
+	retryAttempts = 3
+	// default delay before retry on Slack requests
+	retryDelay = 5 * time.Second
+)
 
 type slackService interface {
 	CreateUserGroupContext(context.Context, slack.UserGroup) (slack.UserGroup, error)
