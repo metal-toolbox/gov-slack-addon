@@ -463,7 +463,7 @@ func (r *Reconciler) UpdateUserGroupMembers(ctx context.Context, groupID, appID 
 
 			// if user is not found (404 error) continue
 			// otherwise, exit out to prevent deleting valid users
-			if err == slack.ErrSlackUserNotFound {
+			if errors.Is(err, slack.ErrSlackUserNotFound) {
 				continue
 			}
 

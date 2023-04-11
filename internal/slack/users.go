@@ -33,7 +33,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*slack.User, error) {
 		}),
 	)
 	if err != nil {
-		if err.Error() == SlackErrorUsersNotFound {
+		if err.Error() == SlackErrorUserNotFound {
 			return nil, ErrSlackUserNotFound
 		}
 
@@ -69,7 +69,7 @@ func (c *Client) GetUserByEmail(ctx context.Context, email string) (*slack.User,
 		}),
 	)
 	if err != nil {
-		if err.Error() == SlackErrorUserNotFound {
+		if err.Error() == SlackErrorUsersNotFound {
 			return nil, ErrSlackUserNotFound
 		}
 
