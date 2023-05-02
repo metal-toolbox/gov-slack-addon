@@ -59,6 +59,8 @@ func init() {
 	// Reconciler flags
 	serveCmd.Flags().Duration("reconciler-interval", 1*time.Hour, "interval for the reconciler loop")
 	viperBindFlag("reconciler.interval", serveCmd.Flags().Lookup("reconciler-interval"))
+	serveCmd.Flags().Bool("reconciler-locking", false, "enable reconciler locking and leader election")
+	viperBindFlag("reconciler.locking", serveCmd.Flags().Lookup("reconciler-locking"))
 
 	// Slack related flags
 	serveCmd.Flags().String("slack-token", "", "api token for slack")
@@ -166,31 +168,26 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		slack.WithToken(viper.GetString("slack.token")),
 	)
 
-	jets, err := nc.JetStream()
-	if err != nil {
-		return err
-	}
-
-	kvStore, err := natslock.NewKeyValue(jets, appName+"-lock", viper.GetDuration("reconciler.interval")+10*time.Second)
-	if err != nil {
-		return err
-	}
-
-	lock := natslock.New(
-		natslock.WithKeyValueStore(kvStore),
-		natslock.WithLogger(logger.Desugar()),
-	)
-
 	rec := reconciler.New(
 		reconciler.WithAuditEventWriter(auditevent.NewDefaultAuditEventWriter(auf)),
 		reconciler.WithClient(sc),
 		reconciler.WithGovernorClient(gc),
-		reconciler.WithLocker(lock),
 		reconciler.WithLogger(logger.Desugar()),
 		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
 		reconciler.WithUserGroupPrefix(viper.GetString("slack.usergroup-prefix")),
 		reconciler.WithDryRun(viper.GetBool("dryrun")),
 	)
+
+	if viper.GetBool("reconciler.locking") {
+		locker, err := newNATSLocker(nc)
+		if err != nil {
+			logger.Warnw("failed to initialize NATS locker", "error", err)
+		}
+
+		if locker != nil {
+			rec.Locker = locker
+		}
+	}
 
 	server := &natssrv.Server{
 		Debug:           viper.GetBool("logging.debug"),
@@ -233,6 +230,24 @@ func newNATSConnection(credsFile, url string) (*nats.Conn, func(), error) {
 	}
 
 	return nc, nc.Close, nil
+}
+
+// newNATSLocker creates a new NATS jetstream locker from a NATS connection
+func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
+	jets, err := nc.JetStream()
+	if err != nil {
+		return nil, err
+	}
+
+	kvStore, err := natslock.NewKeyValue(jets, appName+"-lock", viper.GetDuration("reconciler.interval")+10*time.Second)
+	if err != nil {
+		return nil, err
+	}
+
+	return natslock.New(
+		natslock.WithKeyValueStore(kvStore),
+		natslock.WithLogger(logger.Desugar()),
+	), nil
 }
 
 // validateMandatoryFlags collects the mandatory flag validation

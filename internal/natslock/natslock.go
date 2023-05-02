@@ -7,6 +7,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
 )
 
 // Locker is a distributed lock backed by a JetStream key-value store
@@ -56,6 +57,10 @@ func NewKeyValue(jets nats.JetStreamContext, name string, ttl time.Duration) (na
 
 	jkv, err := jets.KeyValue(name)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
+		}
+
 		// create jetstream key-value bucket
 		jkv, err = jets.CreateKeyValue(&nats.KeyValueConfig{
 			Bucket: name,
