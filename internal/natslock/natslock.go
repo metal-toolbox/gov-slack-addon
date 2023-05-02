@@ -50,6 +50,10 @@ func New(opts ...Option) *Locker {
 // NewKeyValue returns a JetStream key-value store with the given name. If the
 // bucket does not exist, it will be created with the given TTL.
 func NewKeyValue(jets nats.JetStreamContext, name string, ttl time.Duration) (nats.KeyValue, error) {
+	if name == "" || ttl == 0 {
+		return nil, ErrBadParameter
+	}
+
 	jkv, err := jets.KeyValue(name)
 	if err != nil {
 		// create jetstream key-value bucket
@@ -68,6 +72,10 @@ func NewKeyValue(jets nats.JetStreamContext, name string, ttl time.Duration) (na
 // AcquireLead attempts to acquire the leader lock for the given id and returns true if successful.
 // If the lock is already held by another id, it will return false.
 func (l *Locker) AcquireLead(id uuid.UUID) (bool, error) {
+	if id == uuid.Nil {
+		return false, ErrBadParameter
+	}
+
 	entry, err := l.KVStore.Get(l.KVKey)
 
 	switch {
@@ -125,6 +133,10 @@ func (l *Locker) AcquireLead(id uuid.UUID) (bool, error) {
 
 // ReleaseLead releases the leader lock if the given id belongs to the current leader
 func (l *Locker) ReleaseLead(id uuid.UUID) error {
+	if id == uuid.Nil {
+		return ErrBadParameter
+	}
+
 	entry, err := l.KVStore.Get(l.KVKey)
 	if err != nil {
 		return nil
