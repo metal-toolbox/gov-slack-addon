@@ -130,6 +130,8 @@ func (s *Server) Run(ctx context.Context) error {
 		cancel()
 	}()
 
+	s.Reconciler.Stop()
+
 	wg.Add(1)
 
 	go func() {

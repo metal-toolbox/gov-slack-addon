@@ -19,6 +19,7 @@ import (
 	governor "go.equinixmetal.net/governor-api/pkg/client"
 	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
 
+	"github.com/equinixmetal/gov-slack-addon/internal/natslock"
 	"github.com/equinixmetal/gov-slack-addon/internal/natssrv"
 	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
 	"github.com/equinixmetal/gov-slack-addon/internal/slack"
@@ -165,10 +166,26 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		slack.WithToken(viper.GetString("slack.token")),
 	)
 
+	jets, err := nc.JetStream()
+	if err != nil {
+		return err
+	}
+
+	kvStore, err := natslock.NewKeyValue(jets, appName+"-lock", viper.GetDuration("reconciler.interval")+10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	lock := natslock.New(
+		natslock.WithKeyValueStore(kvStore),
+		natslock.WithLogger(logger.Desugar()),
+	)
+
 	rec := reconciler.New(
 		reconciler.WithAuditEventWriter(auditevent.NewDefaultAuditEventWriter(auf)),
 		reconciler.WithClient(sc),
 		reconciler.WithGovernorClient(gc),
+		reconciler.WithLocker(lock),
 		reconciler.WithLogger(logger.Desugar()),
 		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
 		reconciler.WithUserGroupPrefix(viper.GetString("slack.usergroup-prefix")),

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/metal-toolbox/auditevent"
 	"go.uber.org/zap"
 
@@ -12,6 +13,7 @@ import (
 	governor "go.equinixmetal.net/governor-api/pkg/client"
 
 	"github.com/equinixmetal/gov-slack-addon/internal/auctx"
+	"github.com/equinixmetal/gov-slack-addon/internal/natslock"
 	"github.com/equinixmetal/gov-slack-addon/internal/slack"
 )
 
@@ -27,14 +29,17 @@ type govClientIface interface {
 
 // Reconciler reconciles with downstream system
 type Reconciler struct {
+	Client         *slack.Client
+	GovernorClient govClientIface
+	ID             uuid.UUID
+	Locker         *natslock.Locker
+	Logger         *zap.Logger
+
 	auditEventWriter *auditevent.EventWriter
+	dryrun           bool
 	interval         time.Duration
-	Client           *slack.Client
-	GovernorClient   govClientIface
-	Logger           *zap.Logger
 	queue            string
 	userGroupPrefix  string
-	dryrun           bool
 }
 
 // Option is a functional configuration option
@@ -65,6 +70,13 @@ func WithClient(c *slack.Client) Option {
 func WithGovernorClient(c *governor.Client) Option {
 	return func(r *Reconciler) {
 		r.GovernorClient = c
+	}
+}
+
+// WithLocker sets the lead election locker
+func WithLocker(l *natslock.Locker) Option {
+	return func(r *Reconciler) {
+		r.Locker = l
 	}
 }
 
@@ -106,13 +118,22 @@ func New(opts ...Option) *Reconciler {
 		opt(&rec)
 	}
 
-	rec.Logger.Debug("creating new reconciler")
+	var err error
+
+	rec.ID, err = uuid.DefaultGenerator.NewV4()
+	if err != nil {
+		panic(err)
+	}
+
+	rec.Logger.Debug("creating new reconciler", zap.String("id", rec.ID.String()))
 
 	return &rec
 }
 
 // Run starts the reconciler loop
 func (r *Reconciler) Run(ctx context.Context) {
+	r.Logger = r.Logger.With(zap.String("reconciler.id", r.ID.String()))
+
 	ticker := time.NewTicker(r.interval)
 	defer ticker.Stop()
 
@@ -121,6 +142,13 @@ func (r *Reconciler) Run(ctx context.Context) {
 		zap.String("governor.url", r.GovernorClient.URL()),
 		zap.Bool("dryrun", r.dryrun),
 	)
+
+	if r.Locker != nil {
+		r.Logger.Info("using jetstream kv store for locking and leader election",
+			zap.String("bucket", r.Locker.Name()),
+			zap.String("ttl", r.Locker.TTL().String()),
+		)
+	}
 
 	ws, err := r.Client.ListWorkspaces(ctx)
 	if err != nil {
@@ -133,6 +161,19 @@ func (r *Reconciler) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
+			if r.Locker != nil {
+				isLead, err := r.Locker.AcquireLead(r.ID)
+				if err != nil {
+					r.Logger.Error("error checking for leader lock", zap.Error(err))
+					continue
+				}
+
+				if !isLead {
+					r.Logger.Debug("not leader, skipping loop")
+					continue
+				}
+			}
+
 			r.Logger.Info("executing reconciler loop",
 				zap.String("time", time.Now().UTC().Format(time.RFC3339)),
 			)
@@ -198,6 +239,15 @@ func (r *Reconciler) Run(ctx context.Context) {
 			)
 
 			return
+		}
+	}
+}
+
+// Stop stops the reconciler loop and does any necessary cleanup
+func (r *Reconciler) Stop() {
+	if r.Locker != nil {
+		if err := r.Locker.ReleaseLead(r.ID); err != nil {
+			r.Logger.Error("error releasing leader lock", zap.Error(err))
 		}
 	}
 }
