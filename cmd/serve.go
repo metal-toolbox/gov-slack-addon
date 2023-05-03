@@ -19,6 +19,7 @@ import (
 	governor "go.equinixmetal.net/governor-api/pkg/client"
 	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
 
+	"github.com/equinixmetal/gov-slack-addon/internal/natslock"
 	"github.com/equinixmetal/gov-slack-addon/internal/natssrv"
 	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
 	"github.com/equinixmetal/gov-slack-addon/internal/slack"
@@ -58,6 +59,8 @@ func init() {
 	// Reconciler flags
 	serveCmd.Flags().Duration("reconciler-interval", 1*time.Hour, "interval for the reconciler loop")
 	viperBindFlag("reconciler.interval", serveCmd.Flags().Lookup("reconciler-interval"))
+	serveCmd.Flags().Bool("reconciler-locking", false, "enable reconciler locking and leader election")
+	viperBindFlag("reconciler.locking", serveCmd.Flags().Lookup("reconciler-locking"))
 
 	// Slack related flags
 	serveCmd.Flags().String("slack-token", "", "api token for slack")
@@ -175,6 +178,17 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		reconciler.WithDryRun(viper.GetBool("dryrun")),
 	)
 
+	if viper.GetBool("reconciler.locking") {
+		locker, err := newNATSLocker(nc)
+		if err != nil {
+			logger.Warnw("failed to initialize NATS locker", "error", err)
+		}
+
+		if locker != nil {
+			rec.Locker = locker
+		}
+	}
+
 	server := &natssrv.Server{
 		Debug:           viper.GetBool("logging.debug"),
 		Listen:          viper.GetString("listen"),
@@ -216,6 +230,29 @@ func newNATSConnection(credsFile, url string) (*nats.Conn, func(), error) {
 	}
 
 	return nc, nc.Close, nil
+}
+
+// newNATSLocker creates a new NATS jetstream locker from a NATS connection
+func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
+	jets, err := nc.JetStream()
+	if err != nil {
+		return nil, err
+	}
+
+	const timePastInterval = 10 * time.Second
+
+	bucketName := appName + "-lock"
+	ttl := viper.GetDuration("reconciler.interval") + timePastInterval
+
+	kvStore, err := natslock.NewKeyValue(jets, bucketName, ttl)
+	if err != nil {
+		return nil, err
+	}
+
+	return natslock.New(
+		natslock.WithKeyValueStore(kvStore),
+		natslock.WithLogger(logger.Desugar()),
+	), nil
 }
 
 // validateMandatoryFlags collects the mandatory flag validation
