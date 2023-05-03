@@ -239,7 +239,12 @@ func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
 		return nil, err
 	}
 
-	kvStore, err := natslock.NewKeyValue(jets, appName+"-lock", viper.GetDuration("reconciler.interval")+10*time.Second)
+	const timePastInterval = 10 * time.Second
+
+	bucketName := appName + "-lock"
+	ttl := viper.GetDuration("reconciler.interval") + timePastInterval
+
+	kvStore, err := natslock.NewKeyValue(jets, bucketName, ttl)
 	if err != nil {
 		return nil, err
 	}
