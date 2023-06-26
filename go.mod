@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats-server/v2 v2.9.14
 	github.com/nats-io/nats.go v1.25.0
-	github.com/slack-go/slack v0.12.1
+	github.com/slack-go/slack v0.12.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
