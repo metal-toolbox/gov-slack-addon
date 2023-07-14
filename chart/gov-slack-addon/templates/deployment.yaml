@@ -1,0 +1,122 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ template "common.names.fullname" . }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.deployment.replicas }}
+  {{- end }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+    {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.audit.enabled }}
+      initContainers:
+      # Optional: Pre-creates the `/app-audit/audit.log` named pipe.
+      - image: "{{ .Values.audit.auditImage.registry }}/{{ .Values.audit.auditImage.repository }}:{{ .Values.audit.auditImage.tag | default .Chart.AppVersion }}"
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        args:
+          - 'init'
+          - '-f'
+          - '/app-audit/audit.log'
+        name: init-audit-logs
+        imagePullPolicy: Always
+        volumeMounts:
+          - mountPath: /app-audit
+            name: audit-logs
+      {{- with .Values.audit.init.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+    {{- end }}
+      containers:
+        - name: {{ template "common.names.fullname" . }}
+          args:
+            - serve
+          envFrom:
+          - configMapRef:
+              name: {{ template "common.names.fullname" . }}-config
+          - secretRef:
+              name: {{ template "common.names.fullname" . }}-creds
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.deployment.image.registry }}/{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
+          {{- with .Values.deployment.image.pullPolicy }}
+          imagePullPolicy: {{ . }}
+          {{- end }}
+          {{- with .Values.deployment.ports }}
+          ports:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz/liveness
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /healthz/readiness
+              port: http
+          {{- with .Values.deployment.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+          - name: natscreds
+            mountPath: "/nats"
+            readOnly: true  
+        {{- if .Values.audit.enabled }} # Begin audittail toggle
+          # This is mounted in the 1st container
+          - name: audit-logs
+            mountPath: /app-audit
+        # This is the audit container
+        - name: {{ template "common.names.fullname" . }}-audit
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            - -f
+            - /app-audit/audit.log
+          image: "{{ .Values.audit.auditImage.registry }}/{{ .Values.audit.auditImage.repository }}:{{ .Values.audit.auditImage.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+          - name: audit-logs
+            mountPath: /app-audit
+          {{- with .Values.audit.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }} # End audittail toggle
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: natscreds
+        secret:
+          secretName: {{ template "common.names.fullname" . }}-nats-creds
+          defaultMode: 0444
+      {{- if .Values.audit.enabled }}
+      - name: audit-logs
+        emptyDir: {}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

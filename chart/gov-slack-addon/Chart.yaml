@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: "1.0"
+description: A Helm chart for deploying gov-slack-addon
+name: gov-slack-addon
+version: 1.0.0
+kubeVersion: ">=1.21"
+
+dependencies:
+  - name: common
+    repository: https://charts.bitnami.com/bitnami
+    tags:
+      - bitnami-common
+    version: 2.4.0

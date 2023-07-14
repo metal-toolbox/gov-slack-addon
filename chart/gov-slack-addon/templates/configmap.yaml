@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "common.names.fullname" . }}-config
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+data:
+  GSA_DRYRUN: "{{ .Values.dryrun }}"
+  GSA_LOGGING_DEBUG: "{{ .Values.debug }}"
+  GSA_LOGGING_PRETTY: "{{ .Values.pretty }}"
+  GSA_GOVERNOR_AUDIENCE: "{{ .Values.governor.audience }}"
+  GSA_GOVERNOR_CLIENT_ID: "{{ .Values.governor.clientId }}"
+  GSA_GOVERNOR_URL: "{{ .Values.governor.url }}"
+  GSA_GOVERNOR_TOKEN_URL: "{{ .Values.hydra.url }}"
+  GSA_NATS_URL: "{{ .Values.nats.url }}"
+  GSA_NATS_CREDS_FILE: "{{ .Values.nats.credsPath }}/{{ template "common.names.fullname" . }}-nats-client-creds"
+  GSA_RECONCILER_INTERVAL:  "{{ .Values.reconciler.interval }}"
+  GSA_RECONCILER_LOCKING:  "{{ .Values.reconciler.locking }}"

@@ -16,13 +16,13 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/clientcredentials"
 
-	governor "go.equinixmetal.net/governor-api/pkg/client"
-	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
+	governor "github.com/metal-toolbox/governor-api/pkg/client"
+	events "github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
 
-	"github.com/equinixmetal/gov-slack-addon/internal/natslock"
-	"github.com/equinixmetal/gov-slack-addon/internal/natssrv"
-	"github.com/equinixmetal/gov-slack-addon/internal/reconciler"
-	"github.com/equinixmetal/gov-slack-addon/internal/slack"
+	"github.com/metal-toolbox/gov-slack-addon/internal/natslock"
+	"github.com/metal-toolbox/gov-slack-addon/internal/natssrv"
+	"github.com/metal-toolbox/gov-slack-addon/internal/reconciler"
+	"github.com/metal-toolbox/gov-slack-addon/internal/slack"
 )
 
 // serveCmd starts the gov-slack-addon service
@@ -69,7 +69,7 @@ func init() {
 	viperBindFlag("slack.usergroup-prefix", serveCmd.Flags().Lookup("slack-usergroup-prefix"))
 
 	// Governor related flags
-	serveCmd.Flags().String("governor-url", "https://api.iam.equinixmetal.net", "url of the governor api")
+	serveCmd.Flags().String("governor-url", "", "url of the governor api")
 	viperBindFlag("governor.url", serveCmd.Flags().Lookup("governor-url"))
 	serveCmd.Flags().String("governor-client-id", "gov-slack-addon-governor", "oauth client ID for client credentials flow")
 	viperBindFlag("governor.client-id", serveCmd.Flags().Lookup("governor-client-id"))
@@ -85,9 +85,9 @@ func init() {
 	viperBindFlag("nats.url", serveCmd.Flags().Lookup("nats-url"))
 	serveCmd.Flags().String("nats-creds-file", "", "Path to the file containing the NATS credentials file")
 	viperBindFlag("nats.creds-file", serveCmd.Flags().Lookup("nats-creds-file"))
-	serveCmd.Flags().String("nats-subject-prefix", "equinixmetal.governor.events", "prefix for NATS subjects")
+	serveCmd.Flags().String("nats-subject-prefix", "governor.events", "prefix for NATS subjects")
 	viperBindFlag("nats.subject-prefix", serveCmd.Flags().Lookup("nats-subject-prefix"))
-	serveCmd.Flags().String("nats-queue-group", "equinixmetal.governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
+	serveCmd.Flags().String("nats-queue-group", "governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
 	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
 	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint: gomnd
 	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))

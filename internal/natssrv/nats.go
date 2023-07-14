@@ -6,7 +6,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 
-	events "go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
+	events "github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
 )
 
 // NATSClient is a NATS client with some configuration
