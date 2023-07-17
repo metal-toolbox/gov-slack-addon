@@ -1,5 +1,4 @@
 bin/*
-gov-slack-addon
 coverage.out
 *.exe
 *.exe~

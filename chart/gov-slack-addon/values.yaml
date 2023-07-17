@@ -1,0 +1,114 @@
+debug: false
+dryrun: false
+pretty: false
+hydra:
+  url:
+governor:
+  url:
+  clientId:
+  audience:
+nats:
+  url:
+  credsPath: /nats
+  subjectPrefix: governor.events
+reconciler:
+  interval: 1h
+  locking: true
+secrets:
+  governorClientSecret:
+  slackToken:
+  natsCreds:
+deployment:
+  enabled: true
+  image:
+    registry: ghcr.io
+    repository: metal-toolbox/gov-slack-addon
+    tag: "152-27e415f5"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  ports:
+    - name: http
+      containerPort: 8000
+  # -- (dict) resource limits & requests
+  # ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  resources:
+    limits:
+      cpu: 500m
+      memory: 500Mi
+    requests:
+      cpu: 250m
+      memory: 500Mi
+# -- Security context to be added to the deployment
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+# -- include an ingress resource
+# -- ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#what-is-ingress
+ingress:
+  # -- (bool) Set to true to generate Ingress resource
+  enabled: false
+  # -- (string) options are typically nginx or nginx-external, if omited the cluster default is used
+  className: nginx
+  # -- (dict) Custom Ingress annotations
+  annotations: {}
+  # some examples!
+  # cert-manager.io/cluster-issuer: letsencrypt-prod
+  # nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+  # nginx.ingress.kubernetes.io/rewrite-target: /
+  # -- (dict) Custom Ingress labels
+  labels: {}
+  # -- (tpl/string) Set custom host name. (DNS name convention)
+  # @notationType -- tpl
+  host: 'CHANGEME.FQDN'
+  tls:
+    # -- (bool) Set to true to enable HTTPS
+    enabled: true
+    # -- (string) You must provide a secret name where the TLS cert is stored
+    secretName: your-ingress-tls
+# -- ServiceMonitor is how you get metrics into prometheus!
+serviceMonitor:
+  # -- (bool) Set to true to create a default ServiceMonitor for your application
+  enabled: true
+  # -- Labels to add to ServiceMonitor
+  labels: {}
+  # -- Annotations to add to ServiceMonitor
+  annotations: {}
+  # -- Interval for scrape metrics.
+  interval: 10s
+  # -- time out interval when scraping metrics
+  scrapeTimeout: 10s
+service:
+  port: 80
+autoscaling:
+  enabled: false
+# -- (dict) configures metal-toolbox/audittail
+audit:
+  # -- (bool) toggles audittail
+  enabled: true
+  # -- (dict) Infomation about the audittail image
+  auditImage:
+    registry: ghcr.io
+    repository: metal-toolbox/audittail
+    tag: v0.8.0
+    pullPolicy: IfNotPresent
+  # -- (dict) Resources for the audittail container
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  init:
+    # -- (dict) Resources for the audittail init container
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi

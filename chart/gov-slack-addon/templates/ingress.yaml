@@ -1,0 +1,31 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: {{ include "common.capabilities.ingress.apiVersion" . }}
+kind: Ingress
+metadata:
+  name: {{ template "common.names.fullname" . }}
+  {{- with .Values.ingress.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if and .Values.ingress.className (include "common.ingress.supportsIngressClassname" .) }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - host: {{ include "ingress.hostname.rendered" . | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend: {{- include "common.ingress.backend" (dict "serviceName" (include "common.names.fullname" $) "servicePort" "http" "context" $)  | nindent 14 }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ include "ingress.hostname.rendered" . | quote }}
+      secretName: {{include "ingress.hostname.rendered" . | quote }}
+  {{- end }}
+{{- end }}

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/equinixmetal/gov-slack-addon/internal/auctx"
-	"github.com/equinixmetal/gov-slack-addon/internal/slack"
-	"go.equinixmetal.net/governor-api/pkg/api/v1alpha1"
+	"github.com/metal-toolbox/gov-slack-addon/internal/auctx"
+	"github.com/metal-toolbox/gov-slack-addon/internal/slack"
+	"github.com/metal-toolbox/governor-api/pkg/api/v1alpha1"
 	"go.uber.org/zap"
 )
 

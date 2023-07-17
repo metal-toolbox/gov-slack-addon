@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/equinixmetal/gov-slack-addon/internal/auctx"
 	"github.com/metal-toolbox/auditevent"
+	"github.com/metal-toolbox/gov-slack-addon/internal/auctx"
+	"github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
 	"github.com/nats-io/nats.go"
-	"go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
 	"go.uber.org/zap"
 )
 

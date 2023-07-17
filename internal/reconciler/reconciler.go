@@ -9,12 +9,12 @@ import (
 	"github.com/metal-toolbox/auditevent"
 	"go.uber.org/zap"
 
-	"go.equinixmetal.net/governor-api/pkg/api/v1alpha1"
-	governor "go.equinixmetal.net/governor-api/pkg/client"
+	"github.com/metal-toolbox/governor-api/pkg/api/v1alpha1"
+	governor "github.com/metal-toolbox/governor-api/pkg/client"
 
-	"github.com/equinixmetal/gov-slack-addon/internal/auctx"
-	"github.com/equinixmetal/gov-slack-addon/internal/natslock"
-	"github.com/equinixmetal/gov-slack-addon/internal/slack"
+	"github.com/metal-toolbox/gov-slack-addon/internal/auctx"
+	"github.com/metal-toolbox/gov-slack-addon/internal/natslock"
+	"github.com/metal-toolbox/gov-slack-addon/internal/slack"
 )
 
 type govClientIface interface {

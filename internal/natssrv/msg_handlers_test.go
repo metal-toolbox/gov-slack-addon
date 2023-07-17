@@ -3,9 +3,9 @@ package natssrv
 import (
 	"testing"
 
+	"github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
 	"github.com/nats-io/nats.go"
 	"github.com/stretchr/testify/assert"
-	"go.equinixmetal.net/governor-api/pkg/events/v1alpha1"
 	"go.uber.org/zap"
 )
 

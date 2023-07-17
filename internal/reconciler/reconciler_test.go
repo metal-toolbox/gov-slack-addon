@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"go.equinixmetal.net/governor-api/pkg/api/v1alpha1"
+	"github.com/metal-toolbox/governor-api/pkg/api/v1alpha1"
 	"go.uber.org/zap"
 )
 
