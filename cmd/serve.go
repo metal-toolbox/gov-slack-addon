@@ -79,6 +79,8 @@ func init() {
 	viperBindFlag("governor.token-url", serveCmd.Flags().Lookup("governor-token-url"))
 	serveCmd.Flags().String("governor-audience", "http://api:3001/", "oauth audience for client credential flow")
 	viperBindFlag("governor.audience", serveCmd.Flags().Lookup("governor-audience"))
+	serveCmd.Flags().String("governor-application-type", "slack", "application type slug to be listening to events for")
+	viperBindFlag("governor.application-type", serveCmd.Flags().Lookup("governor-application-type"))
 
 	// NATS related flags
 	serveCmd.Flags().String("nats-url", "nats://127.0.0.1:4222", "NATS server connection url")
@@ -176,6 +178,7 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
 		reconciler.WithUserGroupPrefix(viper.GetString("slack.usergroup-prefix")),
 		reconciler.WithDryRun(viper.GetBool("dryrun")),
+		reconciler.WithApplicationType(viper.GetString("governor.application-type")),
 	)
 
 	if viper.GetBool("reconciler.locking") {

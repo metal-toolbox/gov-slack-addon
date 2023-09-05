@@ -54,6 +54,23 @@ func (m mockGovernorClient) Applications(_ context.Context) ([]*v1alpha1.Applica
 	return out, nil
 }
 
+func (m mockGovernorClient) ApplicationTypes(_ context.Context) ([]*v1alpha1.ApplicationType, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	if m.resp == nil {
+		return nil, ErrMissingMockedResponse
+	}
+
+	out := []*v1alpha1.ApplicationType{}
+	if err := json.Unmarshal(m.resp, &out); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
 func (m mockGovernorClient) ApplicationGroups(_ context.Context, _ string) ([]*v1alpha1.Group, error) {
 	if m.err != nil {
 		return nil, m.err

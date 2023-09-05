@@ -20,6 +20,7 @@ import (
 type govClientIface interface {
 	Application(ctx context.Context, id string) (*v1alpha1.Application, error)
 	Applications(ctx context.Context) ([]*v1alpha1.Application, error)
+	ApplicationTypes(ctx context.Context) ([]*v1alpha1.ApplicationType, error)
 	ApplicationGroups(ctx context.Context, id string) ([]*v1alpha1.Group, error)
 	Group(context.Context, string, bool) (*v1alpha1.Group, error)
 	GroupMembers(ctx context.Context, id string) ([]*v1alpha1.GroupMember, error)
@@ -40,6 +41,7 @@ type Reconciler struct {
 	interval         time.Duration
 	queue            string
 	userGroupPrefix  string
+	applicationType  string
 }
 
 // Option is a functional configuration option
@@ -105,6 +107,13 @@ func WithInterval(i time.Duration) Option {
 func WithUserGroupPrefix(p string) Option {
 	return func(r *Reconciler) {
 		r.userGroupPrefix = p
+	}
+}
+
+// WithApplicationType sets the application type slug
+func WithApplicationType(t string) Option {
+	return func(r *Reconciler) {
+		r.applicationType = t
 	}
 }
 
@@ -202,9 +211,28 @@ func (r *Reconciler) Run(ctx context.Context) {
 
 			r.Logger.Debug("got applications", zap.Any("applications list", apps))
 
+			appTypes, err := r.GovernorClient.ApplicationTypes(ctx)
+			if err != nil {
+				r.Logger.Error("error listing governor application types")
+				continue
+			}
+
+			var desiredAppTypeID string
+
+			for _, appType := range appTypes {
+				if appType.Slug == r.applicationType {
+					desiredAppTypeID = appType.ID
+				}
+			}
+
+			if desiredAppTypeID == "" {
+				r.Logger.Error("could not find the specified application type in governor")
+				continue
+			}
+
 			// if it's slack application, reconcile all of the groups linked to it
 			for _, app := range apps {
-				if app.Kind != applicationTypeFilter {
+				if app.TypeID.String != desiredAppTypeID {
 					continue
 				}
 
