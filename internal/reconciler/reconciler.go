@@ -225,6 +225,11 @@ func (r *Reconciler) Run(ctx context.Context) {
 				}
 			}
 
+			if desiredAppTypeID == "" {
+				r.Logger.Error("could not find the specified application type in governor")
+				continue
+			}
+
 			// if it's slack application, reconcile all of the groups linked to it
 			for _, app := range apps {
 				if app.TypeID.String != desiredAppTypeID {
