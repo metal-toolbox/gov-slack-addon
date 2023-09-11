@@ -139,7 +139,7 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		natssrv.WithNATSLogger(logger.Desugar()),
 		natssrv.WithNATSConn(nc),
 		natssrv.WithNATSPrefix(viper.GetString("nats.subject-prefix")),
-		natssrv.WithNATSSubject(events.GovernorApplicationsEventSubject),
+		natssrv.WithNATSSubject(events.GovernorApplicationLinksEventSubject),
 		natssrv.WithNATSQueueGroup(viper.GetString("nats.queue-group"), viper.GetInt("nats.queue-size")),
 	)
 	if err != nil {
