@@ -5,7 +5,7 @@ go 1.20
 replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a
 
 require (
-	github.com/avast/retry-go/v4 v4.3.4
+	github.com/avast/retry-go/v4 v4.6.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/zap v0.1.0
 	github.com/gin-gonic/gin v1.9.1
@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.16.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/zsais/go-gin-prometheus v0.1.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.42.0
 	go.opentelemetry.io/otel v1.16.0
