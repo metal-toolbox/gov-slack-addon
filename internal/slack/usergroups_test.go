@@ -215,6 +215,7 @@ func TestClient_CreateUserGroup(t *testing.T) {
 				t.Errorf("Client.CreateUserGroup() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.CreateUserGroup() = %v, want %v", got, tt.want)
 			}
@@ -293,6 +294,7 @@ func TestClient_DisableUserGroup(t *testing.T) {
 				t.Errorf("Client.DisableUserGroup() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.DisableUserGroup() = %v, want %v", got, tt.want)
 			}
@@ -371,6 +373,7 @@ func TestClient_EnableUserGroup(t *testing.T) {
 				t.Errorf("Client.EnableUserGroup() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.EnableUserGroup() = %v, want %v", got, tt.want)
 			}
@@ -446,6 +449,7 @@ func TestClient_GetUserGroups(t *testing.T) {
 				t.Errorf("Client.GetUserGroups() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.GetUserGroups() = %v, want %v", got, tt.want)
 			}
@@ -510,6 +514,7 @@ func TestClient_GetUserGroupMembers(t *testing.T) {
 				t.Errorf("Client.GetUserGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.GetUserGroupMembers() = %v, want %v", got, tt.want)
 			}
@@ -592,6 +597,7 @@ func TestClient_UpdateUserGroup(t *testing.T) {
 				t.Errorf("Client.UpdateUserGroup() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.UpdateUserGroup() = %v, want %v", got, tt.want)
 			}
@@ -681,6 +687,7 @@ func TestClient_UpdateUserGroupMembers(t *testing.T) {
 				t.Errorf("Client.UpdateUserGroupMembers() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.UpdateUserGroupMembers() = %v, want %v", got, tt.want)
 			}

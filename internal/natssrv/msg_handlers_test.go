@@ -42,6 +42,7 @@ func TestServer_unmarshalPayload(t *testing.T) {
 			s := &Server{
 				Logger: zap.NewNop(),
 			}
+
 			got, err := s.unmarshalPayload(tt.message)
 			if tt.wantErr {
 				assert.Error(t, err)

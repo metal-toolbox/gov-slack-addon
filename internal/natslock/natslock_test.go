@@ -105,8 +105,7 @@ func TestNewKeyValue(t *testing.T) {
 				t.Errorf("NewKeyValue() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
 			// TODO: test success cases
-		})
+		}) //nolint:wsl
 	}
 }

@@ -15,7 +15,7 @@ func (c *Client) ListWorkspaces(ctx context.Context) ([]slack.Team, error) {
 	c.logger.Debug("getting slack workspaces")
 
 	opts := slack.ListTeamsParameters{
-		Limit: 100, //nolint:gomnd
+		Limit: 100, //nolint:mnd
 	}
 
 	teams, _, err := c.slackService.ListTeamsContext(ctx, opts)
