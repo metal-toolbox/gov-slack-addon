@@ -40,7 +40,7 @@ func initTracer() *tracesdk.TracerProvider {
 		// Record information about this application in an Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceNameKey.String("gov-permissions-api-addon"),
+			semconv.ServiceNameKey.String("gov-slack-addon"),
 			attribute.String("environment", viper.GetString("tracing.environment")),
 		)),
 	)
