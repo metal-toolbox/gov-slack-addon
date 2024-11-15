@@ -29,7 +29,7 @@ import (
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "starts the gov-slack-addon service",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		return serve(cmd.Context(), viper.GetViper())
 	},
 }
@@ -91,7 +91,7 @@ func init() {
 	viperBindFlag("nats.subject-prefix", serveCmd.Flags().Lookup("nats-subject-prefix"))
 	serveCmd.Flags().String("nats-queue-group", "governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
 	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
-	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint: gomnd
+	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint:mnd
 	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
 }
 
@@ -294,5 +294,5 @@ func validateMandatoryFlags() error {
 		return nil
 	}
 
-	return fmt.Errorf(strings.Join(errs, "\n")) //nolint:goerr113
+	return fmt.Errorf(strings.Join(errs, "\n")) //nolint:govet,err113,staticcheck
 }

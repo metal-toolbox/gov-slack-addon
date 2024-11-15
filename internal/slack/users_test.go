@@ -89,6 +89,7 @@ func TestClient_GetUser(t *testing.T) {
 				t.Errorf("Client.GetUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.GetUser() = %v, want %v", got, tt.want)
 			}
@@ -155,6 +156,7 @@ func TestClient_GetUserByEmail(t *testing.T) {
 				t.Errorf("Client.GetUserByEmail() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.GetUserByEmail() = %v, want %v", got, tt.want)
 			}

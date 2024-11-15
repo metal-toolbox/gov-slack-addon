@@ -72,6 +72,7 @@ func TestClient_ListWorkspaces(t *testing.T) {
 				t.Errorf("Client.ListWorkspaces() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.ListWorkspaces() = %v, want %v", got, tt.want)
 			}

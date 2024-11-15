@@ -23,6 +23,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*slack.User, error) {
 		func() error {
 			var err error
 			user, err = c.slackService.GetUserInfoContext(ctx, id)
+
 			return err
 		},
 		retry.Attempts(retryAttempts),
@@ -59,6 +60,7 @@ func (c *Client) GetUserByEmail(ctx context.Context, email string) (*slack.User,
 		func() error {
 			var err error
 			user, err = c.slackService.GetUserByEmailContext(ctx, email)
+
 			return err
 		},
 		retry.Attempts(retryAttempts),
