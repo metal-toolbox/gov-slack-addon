@@ -13,7 +13,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/metal-toolbox/auditevent v0.8.0
-	github.com/metal-toolbox/governor-api v0.2.4
+	github.com/metal-toolbox/governor-api v0.2.6
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats-server/v2 v2.10.25
 	github.com/nats-io/nats.go v1.38.0
