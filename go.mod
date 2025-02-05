@@ -16,7 +16,7 @@ require (
 	github.com/metal-toolbox/governor-api v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats-server/v2 v2.10.25
-	github.com/nats-io/nats.go v1.38.0
+	github.com/nats-io/nats.go v1.39.0
 	github.com/slack-go/slack v0.15.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.6
