@@ -11,6 +11,8 @@ import (
 
 	"github.com/metal-toolbox/auditevent"
 	audithelpers "github.com/metal-toolbox/auditevent/helpers"
+	"github.com/metal-toolbox/iam-runtime-contrib/iamruntime"
+	"github.com/metal-toolbox/iam-runtime/pkg/iam/runtime/identity"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -93,6 +95,14 @@ func init() {
 	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
 	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint:mnd
 	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
+	serveCmd.PersistentFlags().Bool("nats-use-runtime-access-token", false, "use IAM runtime to authenticate to NATS")
+	viperBindFlag("nats.use-runtime-access-token", serveCmd.PersistentFlags().Lookup("nats-use-runtime-access-token"))
+
+	// IAM runtime
+	serveCmd.PersistentFlags().String("iam-runtime-socket", "unix:///tmp/runtime.sock", "IAM runtime socket path")
+	viperBindFlag("iam-runtime.socket", serveCmd.PersistentFlags().Lookup("iam-runtime-socket"))
+	serveCmd.PersistentFlags().Duration("iam-runtime-timeout", defaultIAMRuntimeTimeoutSeconds*time.Second, "IAM runtime timeout")
+	viperBindFlag("iam-runtime.timeout", serveCmd.PersistentFlags().Lookup("iam-runtime-timeout"))
 }
 
 func serve(cmdCtx context.Context, _ *viper.Viper) error {
@@ -225,6 +235,28 @@ func newNATSConnection(credsFile, url string) (*nats.Conn, func(), error) {
 		opts = append(opts, nats.UserCredentials(credsFile))
 	} else {
 		return nil, nil, ErrMissingNATSCreds
+	}
+
+	if viper.GetBool("nats.use-runtime-access-token") {
+		rt, err := iamruntime.NewClient(viper.GetString("iam-runtime.socket"))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		timeout := viper.GetDuration("iam-runtime.timeout")
+
+		opts = append(opts, nats.UserInfoHandler(func() (string, string) {
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			iamCreds, err := rt.GetAccessToken(ctx, &identity.GetAccessTokenRequest{})
+			if err != nil {
+				logger.Errorw("failed to get an access token from the iam-runtime", "error", err)
+				return appName, ""
+			}
+
+			return appName, iamCreds.Token
+		}))
 	}
 
 	nc, err := nats.Connect(url, opts...)
