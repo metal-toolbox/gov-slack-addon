@@ -4,7 +4,7 @@ go 1.23.0
 
 toolchain go1.23.6
 
-replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a
+replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20221224054449-a73519980223
 
 require (
 	github.com/avast/retry-go/v4 v4.6.0
