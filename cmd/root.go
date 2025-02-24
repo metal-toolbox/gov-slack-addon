@@ -11,7 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
-const appName = "gov-slack-addon"
+const (
+	appName                         = "gov-slack-addon"
+	defaultIAMRuntimeTimeoutSeconds = 15
+)
 
 var (
 	cfgFile string
