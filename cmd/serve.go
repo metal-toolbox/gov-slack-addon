@@ -326,5 +326,5 @@ func validateMandatoryFlags() error {
 		return nil
 	}
 
-	return fmt.Errorf(strings.Join(errs, "\n")) //nolint:govet,err113,staticcheck
+	return fmt.Errorf("%s", strings.Join(errs, "\n")) //nolint:govet,err113,staticcheck
 }
