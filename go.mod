@@ -5,7 +5,7 @@ go 1.24.1
 replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a
 
 require (
-	github.com/avast/retry-go/v4 v4.6.0
+	github.com/avast/retry-go/v4 v4.6.1
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-contrib/zap v1.1.4
 	github.com/gin-gonic/gin v1.10.0
