@@ -1,8 +1,6 @@
 module github.com/metal-toolbox/gov-slack-addon
 
-go 1.23.0
-
-toolchain go1.24.1
+go 1.24.1
 
 replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a
 
