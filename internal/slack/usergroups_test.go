@@ -17,7 +17,7 @@ func (m *mockSlackService) CreateUserGroupContext(_ context.Context, ug slack.Us
 	}
 
 	if ug.Name == "Already Exists" {
-		return slack.UserGroup{}, errors.New("name_already_exists") //nolint:goerr113
+		return slack.UserGroup{}, errors.New("name_already_exists") //nolint:err113
 	}
 
 	return slack.UserGroup{
@@ -35,7 +35,7 @@ func (m *mockSlackService) DisableUserGroupContext(_ context.Context, groupID st
 	}
 
 	if groupID == "notfound" {
-		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:goerr113
+		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:err113
 	}
 
 	return *m.userGroupResp, nil
@@ -47,7 +47,7 @@ func (m *mockSlackService) EnableUserGroupContext(_ context.Context, groupID str
 	}
 
 	if groupID == "notfound" {
-		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:goerr113
+		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:err113
 	}
 
 	return *m.userGroupResp, nil
@@ -59,7 +59,7 @@ func (m *mockSlackService) GetUserGroupMembersContext(_ context.Context, groupID
 	}
 
 	if groupID == "notfound" {
-		return nil, errors.New("subteam_not_found") //nolint:goerr113
+		return nil, errors.New("subteam_not_found") //nolint:err113
 	}
 
 	return []string{"U0001", "U0002", "U0003"}, nil
@@ -76,7 +76,7 @@ func (m *mockSlackService) GetUserGroupsContext(_ context.Context, opts ...slack
 	}
 
 	if params.TeamID == "notfound" {
-		return nil, errors.New("team_not_found") //nolint:goerr113
+		return nil, errors.New("team_not_found") //nolint:err113
 	}
 
 	return []slack.UserGroup{*m.userGroupResp}, nil
@@ -107,7 +107,7 @@ func (m *mockSlackService) UpdateUserGroupMembersContext(_ context.Context, grou
 	}
 
 	if groupID == "notfound" {
-		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:goerr113
+		return slack.UserGroup{}, errors.New("subteam_not_found") //nolint:err113
 	}
 
 	params := &slack.UpdateUserGroupMembersParams{}
@@ -196,7 +196,7 @@ func TestClient_CreateUserGroup(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -274,7 +274,7 @@ func TestClient_DisableUserGroup(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -353,7 +353,7 @@ func TestClient_EnableUserGroup(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -429,7 +429,7 @@ func TestClient_GetUserGroups(t *testing.T) {
 		{
 			name:    "slack error",
 			resp:    testResp,
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -495,7 +495,7 @@ func TestClient_GetUserGroupMembers(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -578,7 +578,7 @@ func TestClient_UpdateUserGroup(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -668,7 +668,7 @@ func TestClient_UpdateUserGroupMembers(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}

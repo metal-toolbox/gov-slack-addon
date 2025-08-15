@@ -52,7 +52,7 @@ func TestReconciler_isSlackApplication(t *testing.T) {
 		{
 			name:    "governor error",
 			args:    args{appID: "101-slack"},
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}

@@ -55,7 +55,7 @@ func TestClient_ListWorkspaces(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
