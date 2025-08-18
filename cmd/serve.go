@@ -11,14 +11,13 @@ import (
 
 	"github.com/metal-toolbox/auditevent"
 	audithelpers "github.com/metal-toolbox/auditevent/helpers"
-	"github.com/metal-toolbox/iam-runtime-contrib/iamruntime"
-	"github.com/metal-toolbox/iam-runtime/pkg/iam/runtime/identity"
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2/clientcredentials"
 
 	governor "github.com/metal-toolbox/governor-api/pkg/client"
+	"github.com/metal-toolbox/governor-api/pkg/configs"
 	events "github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
 
 	"github.com/metal-toolbox/gov-slack-addon/internal/natslock"
@@ -84,25 +83,12 @@ func init() {
 	serveCmd.Flags().String("governor-application-type", "slack", "application type slug to be listening to events for")
 	viperBindFlag("governor.application-type", serveCmd.Flags().Lookup("governor-application-type"))
 
-	// NATS related flags
-	serveCmd.Flags().String("nats-url", "nats://127.0.0.1:4222", "NATS server connection url")
-	viperBindFlag("nats.url", serveCmd.Flags().Lookup("nats-url"))
-	serveCmd.Flags().String("nats-creds-file", "", "Path to the file containing the NATS credentials file")
-	viperBindFlag("nats.creds-file", serveCmd.Flags().Lookup("nats-creds-file"))
-	serveCmd.Flags().String("nats-subject-prefix", "governor.events", "prefix for NATS subjects")
-	viperBindFlag("nats.subject-prefix", serveCmd.Flags().Lookup("nats-subject-prefix"))
+	// NATS Flags
+	configs.AddFlags(serveCmd.Flags())
 	serveCmd.Flags().String("nats-queue-group", "governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
 	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
 	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint:mnd
 	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
-	serveCmd.PersistentFlags().Bool("nats-use-runtime-access-token", false, "use IAM runtime to authenticate to NATS")
-	viperBindFlag("nats.use-runtime-access-token", serveCmd.PersistentFlags().Lookup("nats-use-runtime-access-token"))
-
-	// IAM runtime
-	serveCmd.PersistentFlags().String("iam-runtime-socket", "unix:///tmp/runtime.sock", "IAM runtime socket path")
-	viperBindFlag("iam-runtime.socket", serveCmd.PersistentFlags().Lookup("iam-runtime-socket"))
-	serveCmd.PersistentFlags().Duration("iam-runtime-timeout", defaultIAMRuntimeTimeoutSeconds*time.Second, "IAM runtime timeout")
-	viperBindFlag("iam-runtime.timeout", serveCmd.PersistentFlags().Lookup("iam-runtime-timeout"))
 }
 
 func serve(cmdCtx context.Context, _ *viper.Viper) error {
@@ -136,19 +122,17 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 	}
 	defer auf.Close()
 
-	nc, natsClose, err := newNATSConnection(
-		viper.GetString("nats.creds-file"),
-		viper.GetString("nats.url"))
+	nc, err := appConfig.NATSConn(ctx, appName, configs.WithLogger(logger.Desugar()))
 	if err != nil {
 		logger.Fatalw("failed to create NATS client connection", "error", err)
 	}
 
-	defer natsClose()
+	defer nc.Close()
 
 	natsClient, err := natssrv.NewNATSClient(
 		natssrv.WithNATSLogger(logger.Desugar()),
 		natssrv.WithNATSConn(nc),
-		natssrv.WithNATSPrefix(viper.GetString("nats.subject-prefix")),
+		natssrv.WithNATSPrefix(appConfig.NATS.SubjectPrefix),
 		natssrv.WithNATSSubject(events.GovernorApplicationLinksEventSubject),
 		natssrv.WithNATSQueueGroup(viper.GetString("nats.queue-group"), viper.GetInt("nats.queue-size")),
 	)
@@ -225,48 +209,6 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 	return nil
 }
 
-// newNATSConnection creates a new NATS connection
-func newNATSConnection(credsFile, url string) (*nats.Conn, func(), error) {
-	opts := []nats.Option{
-		nats.Name(appName),
-	}
-
-	if credsFile != "" {
-		opts = append(opts, nats.UserCredentials(credsFile))
-	} else {
-		return nil, nil, ErrMissingNATSCreds
-	}
-
-	if viper.GetBool("nats.use-runtime-access-token") {
-		rt, err := iamruntime.NewClient(viper.GetString("iam-runtime.socket"))
-		if err != nil {
-			return nil, nil, err
-		}
-
-		timeout := viper.GetDuration("iam-runtime.timeout")
-
-		opts = append(opts, nats.UserInfoHandler(func() (string, string) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-
-			iamCreds, err := rt.GetAccessToken(ctx, &identity.GetAccessTokenRequest{})
-			if err != nil {
-				logger.Errorw("failed to get an access token from the iam-runtime", "error", err)
-				return appName, ""
-			}
-
-			return appName, iamCreds.Token
-		}))
-	}
-
-	nc, err := nats.Connect(url, opts...)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return nc, nc.Close, nil
-}
-
 // newNATSLocker creates a new NATS jetstream locker from a NATS connection
 func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
 	jets, err := nc.JetStream()
@@ -292,11 +234,11 @@ func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
 
 // validateMandatoryFlags collects the mandatory flag validation
 func validateMandatoryFlags() error {
-	errs := []string{}
-
-	if viper.GetString("nats.url") == "" {
-		errs = append(errs, ErrNATSURLRequired.Error())
+	if err := appConfig.Validate(); err != nil {
+		return fmt.Errorf("invalid config: %w", err)
 	}
+
+	errs := []string{}
 
 	if viper.GetString("slack.token") == "" {
 		errs = append(errs, ErrSlackTokenRequired.Error())

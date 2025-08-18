@@ -16,7 +16,7 @@ func (m *mockSlackService) GetUserInfoContext(_ context.Context, id string) (*sl
 	}
 
 	if id == "notfound" {
-		return nil, errors.New("user_not_found") //nolint:goerr113
+		return nil, errors.New("user_not_found") //nolint:err113
 	}
 
 	return m.userResp, nil
@@ -28,7 +28,7 @@ func (m *mockSlackService) GetUserByEmailContext(_ context.Context, id string) (
 	}
 
 	if id == "notfound" {
-		return nil, errors.New("users_not_found") //nolint:goerr113
+		return nil, errors.New("users_not_found") //nolint:err113
 	}
 
 	return m.userResp, nil
@@ -70,7 +70,7 @@ func TestClient_GetUser(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
@@ -136,7 +136,7 @@ func TestClient_GetUserByEmail(t *testing.T) {
 		},
 		{
 			name:    "slack error",
-			err:     errors.New("boom"), //nolint:goerr113
+			err:     errors.New("boom"), //nolint:err113
 			wantErr: true,
 		},
 	}
