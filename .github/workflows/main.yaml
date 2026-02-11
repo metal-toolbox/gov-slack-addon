@@ -69,7 +69,7 @@ jobs:
       image-repo: ${{ needs.setup.outputs.image_repo }}
       image-tag: ${{ needs.setup.outputs.image_tag }}
       build-args: |
-        BIN=bin/${{ needs.setup.outputs.app_name }}
+        NAME=${{ needs.setup.outputs.app_name }}
     secrets: inherit
 
   trivy-scan:
