@@ -1,13 +1,13 @@
 package natslock
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 )
 
 // Locker is a distributed lock backed by a JetStream key-value store
