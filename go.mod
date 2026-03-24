@@ -2,7 +2,7 @@ module github.com/metal-toolbox/gov-slack-addon
 
 go 1.26.0
 
-replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20230302003044-bf98edf7265a
+replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-20221224054449-a73519980223
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
