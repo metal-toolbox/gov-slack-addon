@@ -6,6 +6,7 @@ replace github.com/slack-go/slack => github.com/tenyo/slack v0.0.0-2023030200304
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
+	github.com/avast/retry-go/v5 v5.0.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-contrib/zap v1.1.6
 	github.com/gin-gonic/gin v1.11.0
