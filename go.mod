@@ -4,6 +4,7 @@ go 1.26.4
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
+	github.com/avast/retry-go/v5 v5.0.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-contrib/zap v1.1.7
 	github.com/gin-gonic/gin v1.12.0
