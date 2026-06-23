@@ -23,9 +23,9 @@ const (
 )
 
 type slackService interface {
-	CreateUserGroupContext(context.Context, slack.UserGroup) (slack.UserGroup, error)
+	CreateUserGroupContext(context.Context, slack.UserGroup, ...slack.CreateUserGroupOption) (slack.UserGroup, error)
 	DisableUserGroupContext(context.Context, string, ...slack.DisableUserGroupOption) (slack.UserGroup, error)
-	EnableUserGroupContext(context.Context, string, ...slack.DisableUserGroupOption) (slack.UserGroup, error)
+	EnableUserGroupContext(context.Context, string, ...slack.EnableUserGroupOption) (slack.UserGroup, error)
 	GetUserGroupMembersContext(context.Context, string, ...slack.GetUserGroupMembersOption) ([]string, error)
 	GetUserGroupsContext(context.Context, ...slack.GetUserGroupsOption) ([]slack.UserGroup, error)
 	GetUserInfoContext(context.Context, string) (*slack.User, error)

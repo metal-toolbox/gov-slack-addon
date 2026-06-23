@@ -89,9 +89,9 @@ func (c *Client) EnableUserGroup(ctx context.Context, groupID, teamID string) (*
 
 	c.logger.Debug("enabling slack user group", zap.String("slack.usergroup.id", groupID), zap.String("workspace", teamID))
 
-	opts := []slack.DisableUserGroupOption{
-		slack.DisableUserGroupOptionIncludeCount(true),
-		slack.DisableUserGroupOptionTeamID(teamID),
+	opts := []slack.EnableUserGroupOption{
+		slack.EnableUserGroupOptionIncludeCount(true),
+		slack.EnableUserGroupOptionTeamID(teamID),
 	}
 
 	ug, err := c.slackService.EnableUserGroupContext(ctx, groupID, opts...)
@@ -185,7 +185,7 @@ func (c *Client) UpdateUserGroup(ctx context.Context, groupID, teamID string, us
 	)
 
 	opts := []slack.UpdateUserGroupsOption{
-		slack.UpdateUserGroupsOptionTeamID(&teamID),
+		slack.UpdateUserGroupsOptionTeamID(teamID),
 	}
 
 	if userGroup.Name != nil {
