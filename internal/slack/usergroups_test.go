@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (m *mockSlackService) CreateUserGroupContext(_ context.Context, ug slack.UserGroup) (slack.UserGroup, error) {
+func (m *mockSlackService) CreateUserGroupContext(_ context.Context, ug slack.UserGroup, _ ...slack.CreateUserGroupOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -41,7 +41,7 @@ func (m *mockSlackService) DisableUserGroupContext(_ context.Context, groupID st
 	return *m.userGroupResp, nil
 }
 
-func (m *mockSlackService) EnableUserGroupContext(_ context.Context, groupID string, _ ...slack.DisableUserGroupOption) (slack.UserGroup, error) {
+func (m *mockSlackService) EnableUserGroupContext(_ context.Context, groupID string, _ ...slack.EnableUserGroupOption) (slack.UserGroup, error) {
 	if m.Error != nil {
 		return slack.UserGroup{}, m.Error
 	}
@@ -94,7 +94,7 @@ func (m *mockSlackService) UpdateUserGroupContext(_ context.Context, groupID str
 
 	return slack.UserGroup{
 		ID:          groupID,
-		TeamID:      *params.TeamID,
+		TeamID:      params.TeamID,
 		Name:        params.Name,
 		Handle:      params.Handle,
 		Description: *params.Description,
