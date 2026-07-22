@@ -1,6 +1,6 @@
 module github.com/metal-toolbox/gov-slack-addon
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
