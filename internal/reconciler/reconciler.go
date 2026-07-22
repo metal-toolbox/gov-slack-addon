@@ -159,13 +159,17 @@ func (r *Reconciler) Run(ctx context.Context) {
 		)
 	}
 
-	ws, err := r.Client.ListWorkspaces(ctx)
-	if err != nil {
-		r.Logger.Error(err.Error())
-		panic(err)
-	}
+	// in dry-run mode we don't make any requests to slack, so skip the
+	// startup workspace listing (which would otherwise require a valid token)
+	if !r.dryrun {
+		ws, err := r.Client.ListWorkspaces(ctx)
+		if err != nil {
+			r.Logger.Error(err.Error())
+			panic(err)
+		}
 
-	r.Logger.Info("slack token has access to the following workspaces", zap.Any("workspaces", ws))
+		r.Logger.Info("slack token has access to the following workspaces", zap.Any("workspaces", ws))
+	}
 
 	for {
 		select {

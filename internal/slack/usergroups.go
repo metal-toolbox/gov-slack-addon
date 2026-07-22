@@ -46,7 +46,7 @@ func (c *Client) CreateUserGroup(ctx context.Context, teamID string, userGroup *
 			return nil, ErrSlackGroupAlreadyExists
 		}
 
-		return nil, err
+		return nil, apiError("create user group", err)
 	}
 
 	c.logger.Debug("created slack user group", zap.Any("slack.usergroup", ug))
@@ -73,7 +73,7 @@ func (c *Client) DisableUserGroup(ctx context.Context, groupID, teamID string) (
 			return nil, ErrSlackGroupNotFound
 		}
 
-		return nil, err
+		return nil, apiError("disable user group", err)
 	}
 
 	c.logger.Debug("disabled slack user group", zap.Any("slack.usergroup", ug))
@@ -100,7 +100,7 @@ func (c *Client) EnableUserGroup(ctx context.Context, groupID, teamID string) (*
 			return nil, ErrSlackGroupNotFound
 		}
 
-		return nil, err
+		return nil, apiError("enable user group", err)
 	}
 
 	c.logger.Debug("enabled slack user group", zap.Any("slack.usergroup", ug))
@@ -129,7 +129,7 @@ func (c *Client) GetUserGroups(ctx context.Context, teamID string, includeDisabl
 			return nil, ErrSlackWorkspaceNotFound
 		}
 
-		return nil, err
+		return nil, apiError("get user groups", err)
 	}
 
 	c.logger.Debug("returning slack user groups", zap.Any("slack.usergroups", groups))
@@ -160,7 +160,7 @@ func (c *Client) GetUserGroupMembers(ctx context.Context, groupID, teamID string
 			return nil, ErrSlackGroupNotFound
 		}
 
-		return nil, err
+		return nil, apiError("get user group members", err)
 	}
 
 	c.logger.Debug("returning slack user group members", zap.Any("slack.usergroup.members", members))
@@ -202,7 +202,7 @@ func (c *Client) UpdateUserGroup(ctx context.Context, groupID, teamID string, us
 
 	ug, err := c.slackService.UpdateUserGroupContext(ctx, groupID, opts...)
 	if err != nil {
-		return nil, err
+		return nil, apiError("update user group", err)
 	}
 
 	c.logger.Debug("updated slack user group", zap.Any("slack.usergroup", ug))
@@ -241,7 +241,7 @@ func (c *Client) UpdateUserGroupMembers(ctx context.Context, groupID, teamID str
 			return nil, ErrSlackGroupNotFound
 		}
 
-		return nil, err
+		return nil, apiError("update user group members", err)
 	}
 
 	c.logger.Debug("updated slack user group members", zap.Any("slack.usergroup", ug))

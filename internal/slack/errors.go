@@ -2,6 +2,7 @@ package slack
 
 import (
 	"errors"
+	"fmt"
 )
 
 // list of error messages returned by the slack api
@@ -35,4 +36,15 @@ var (
 
 	// ErrSlackWorkspaceNotFound is returned when the slack workspace (team) is not found
 	ErrSlackWorkspaceNotFound = errors.New("slack workspace not found")
+
+	// ErrSlackAPI is returned when a request to the Slack API fails. It wraps the
+	// underlying slack-go error so callers can tell the failure originated from Slack.
+	ErrSlackAPI = errors.New("slack api request failed")
 )
+
+// apiError wraps an error returned by the Slack API with the operation that
+// failed, making it clear the error came from Slack rather than governor or
+// another dependency (e.g. "slack api request failed: list workspaces: invalid_auth").
+func apiError(op string, err error) error {
+	return fmt.Errorf("%w: %s: %w", ErrSlackAPI, op, err)
+}

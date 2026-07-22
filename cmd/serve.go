@@ -3,10 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/url"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/metal-toolbox/auditevent"
@@ -14,101 +15,77 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/oauth2/clientcredentials"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.uber.org/zap"
 
 	governor "github.com/metal-toolbox/governor-api/pkg/client"
-	"github.com/metal-toolbox/governor-api/pkg/configs"
-	events "github.com/metal-toolbox/governor-api/pkg/events/v1alpha1"
+	govcfg "github.com/metal-toolbox/governor-api/pkg/configs"
+	sdkcfg "github.com/metal-toolbox/governor-extension-sdk/pkg/configs"
+	extserver "github.com/metal-toolbox/governor-extension-sdk/pkg/server"
 
+	"github.com/metal-toolbox/gov-slack-addon/internal/configs"
 	"github.com/metal-toolbox/gov-slack-addon/internal/natslock"
 	"github.com/metal-toolbox/gov-slack-addon/internal/natssrv"
 	"github.com/metal-toolbox/gov-slack-addon/internal/reconciler"
 	"github.com/metal-toolbox/gov-slack-addon/internal/slack"
 )
 
+const govClientTimeout = 10 * time.Second
+
 // serveCmd starts the gov-slack-addon service
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "starts the gov-slack-addon service",
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		return serve(cmd.Context(), viper.GetViper())
+		return serve(cmd.Context())
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().String("listen", "0.0.0.0:8000", "address to listen on")
-	viperBindFlag("listen", serveCmd.Flags().Lookup("listen"))
+	v := viper.GetViper()
+	flags := serveCmd.Flags()
 
-	serveCmd.PersistentFlags().Bool("dry-run", false, "do not make any changes, just log what would be done")
-	viperBindFlag("dryrun", serveCmd.PersistentFlags().Lookup("dry-run"))
-
-	// Tracing Flags
-	serveCmd.Flags().Bool("tracing", false, "enable tracing support")
-	viperBindFlag("tracing.enabled", serveCmd.Flags().Lookup("tracing"))
-	serveCmd.Flags().String("tracing-provider", "jaeger", "tracing provider to use")
-	viperBindFlag("tracing.provider", serveCmd.Flags().Lookup("tracing-provider"))
-	serveCmd.Flags().String("tracing-endpoint", "", "endpoint where traces are sent")
-	viperBindFlag("tracing.endpoint", serveCmd.Flags().Lookup("tracing-endpoint"))
-	serveCmd.Flags().String("tracing-environment", "production", "environment value in traces")
-	viperBindFlag("tracing.environment", serveCmd.Flags().Lookup("tracing-environment"))
-
-	serveCmd.Flags().String("audit-log-path", "/app-audit/audit.log", "file path to write audit logs to.")
-	viperBindFlag("audit.log-path", serveCmd.Flags().Lookup("audit-log-path"))
-
-	// Reconciler flags
-	serveCmd.Flags().Duration("reconciler-interval", 1*time.Hour, "interval for the reconciler loop")
-	viperBindFlag("reconciler.interval", serveCmd.Flags().Lookup("reconciler-interval"))
-	serveCmd.Flags().Bool("reconciler-locking", false, "enable reconciler locking and leader election")
-	viperBindFlag("reconciler.locking", serveCmd.Flags().Lookup("reconciler-locking"))
-
-	// Slack related flags
-	serveCmd.Flags().String("slack-token", "", "api token for slack")
-	viperBindFlag("slack.token", serveCmd.Flags().Lookup("slack-token"))
-	serveCmd.Flags().String("slack-usergroup-prefix", "[Governor] ", "string to be prepended to slack usergroup names")
-	viperBindFlag("slack.usergroup-prefix", serveCmd.Flags().Lookup("slack-usergroup-prefix"))
-
-	// Governor related flags
-	serveCmd.Flags().String("governor-url", "", "url of the governor api")
-	viperBindFlag("governor.url", serveCmd.Flags().Lookup("governor-url"))
-	serveCmd.Flags().String("governor-client-id", "gov-slack-addon-governor", "oauth client ID for client credentials flow")
-	viperBindFlag("governor.client-id", serveCmd.Flags().Lookup("governor-client-id"))
-	serveCmd.Flags().String("governor-client-secret", "", "oauth client secret for client credentials flow")
-	viperBindFlag("governor.client-secret", serveCmd.Flags().Lookup("governor-client-secret"))
-	serveCmd.Flags().String("governor-token-url", "http://hydra:4444/oauth2/token", "url used for client credential flow")
-	viperBindFlag("governor.token-url", serveCmd.Flags().Lookup("governor-token-url"))
-	serveCmd.Flags().String("governor-audience", "http://api:3001/", "oauth audience for client credential flow")
-	viperBindFlag("governor.audience", serveCmd.Flags().Lookup("governor-audience"))
-	serveCmd.Flags().String("governor-application-type", "slack", "application type slug to be listening to events for")
-	viperBindFlag("governor.application-type", serveCmd.Flags().Lookup("governor-application-type"))
-
-	// NATS Flags
-	configs.AddFlags(serveCmd.Flags())
-	serveCmd.Flags().String("nats-queue-group", "governor.addons.gov-slack-addon", "queue group for load balancing messages across NATS consumers")
-	viperBindFlag("nats.queue-group", serveCmd.Flags().Lookup("nats-queue-group"))
-	serveCmd.Flags().Int("nats-queue-size", 3, "queue size for load balancing messages across NATS consumers") //nolint:mnd
-	viperBindFlag("nats.queue-size", serveCmd.Flags().Lookup("nats-queue-size"))
+	sdkcfg.MustServerFlags(v, flags)
+	sdkcfg.MustNATSFlags(v, flags)
+	configs.MustSlackFlags(v, flags)
+	configs.MustGovernorFlags(v, flags)
+	configs.MustReconcilerFlags(v, flags)
 }
 
-func serve(cmdCtx context.Context, _ *viper.Viper) error {
-	initTracing()
-
+func serve(cmdCtx context.Context) error {
 	if err := validateMandatoryFlags(); err != nil {
 		return err
 	}
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	ctx, cancel := context.WithCancel(cmdCtx)
 
 	go func() {
 		<-c
 		cancel()
+		logger.Debug("received shutdown signal, cancel called")
 	}()
 
-	auditpath := viper.GetString("audit.log-path")
+	tp, traceShutdown, err := configs.AppConfig.Tracing.InitTracing(ctx, appName)
+	if err != nil {
+		logger.Fatalw("failed to initialize tracing", "error", err)
+	}
+
+	tracer := tp.Tracer(appName)
+
+	defer func() {
+		logger.Info("shutting down otel tracer")
+
+		if err := traceShutdown(context.Background()); err != nil {
+			logger.Desugar().Error("failed to shutdown tracer provider", zap.Error(err))
+		}
+	}()
+
+	auditpath := configs.AppConfig.Audit.LogPath
 
 	if auditpath == "" {
 		logger.Fatal("failed starting server. Audit log file path can't be empty")
@@ -122,46 +99,40 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 	}
 	defer auf.Close()
 
-	nc, err := appConfig.NATSConn(ctx, appName, configs.WithLogger(logger.Desugar()))
+	// NATS connection
+	nc, err := configs.AppConfig.NATSConn(ctx, appName, govcfg.WithLogger(logger.Desugar()))
 	if err != nil {
 		logger.Fatalw("failed to create NATS client connection", "error", err)
 	}
 
 	defer nc.Close()
 
-	natsClient, err := natssrv.NewNATSClient(
-		natssrv.WithNATSLogger(logger.Desugar()),
-		natssrv.WithNATSConn(nc),
-		natssrv.WithNATSPrefix(appConfig.NATS.SubjectPrefix),
-		natssrv.WithNATSSubject(events.GovernorApplicationLinksEventSubject),
-		natssrv.WithNATSQueueGroup(viper.GetString("nats.queue-group"), viper.GetInt("nats.queue-size")),
+	natsClient, err := extserver.NewNATSClient(
+		extserver.WithNATSLogger(logger.Desugar()),
+		extserver.WithNATSConn(nc),
+		extserver.WithNATSPrefix(configs.AppConfig.NATS.SubjectPrefix),
+		extserver.WithNATSQueueGroup(configs.AppConfig.NATS.QueueGroup, configs.AppConfig.NATS.QueueSize),
+		extserver.WithNATSTracer(tracer),
 	)
 	if err != nil {
 		logger.Fatalw("failed creating new NATS client", "error", err)
 	}
 
-	gc, err := governor.NewClient(
+	gc, err := configs.NewGovernorClient(
+		ctx,
 		governor.WithLogger(logger.Desugar()),
-		governor.WithURL(viper.GetString("governor.url")),
-		governor.WithClientCredentialConfig(&clientcredentials.Config{
-			ClientID:       viper.GetString("governor.client-id"),
-			ClientSecret:   viper.GetString("governor.client-secret"),
-			TokenURL:       viper.GetString("governor.token-url"),
-			EndpointParams: url.Values{"audience": {viper.GetString("governor.audience")}},
-			Scopes: []string{
-				"read:governor:users",
-				"read:governor:groups",
-				"read:governor:applications",
-			},
+		governor.WithHTTPClient(&http.Client{
+			Timeout:   govClientTimeout,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		}),
 	)
 	if err != nil {
-		return err
+		logger.Fatalw("failed creating governor client", "error", err)
 	}
 
 	sc := slack.NewClient(
 		slack.WithLogger(logger.Desugar()),
-		slack.WithToken(viper.GetString("slack.token")),
+		slack.WithToken(configs.AppConfig.Slack.Token),
 	)
 
 	rec := reconciler.New(
@@ -169,13 +140,13 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		reconciler.WithClient(sc),
 		reconciler.WithGovernorClient(gc),
 		reconciler.WithLogger(logger.Desugar()),
-		reconciler.WithInterval(viper.GetDuration("reconciler.interval")),
-		reconciler.WithUserGroupPrefix(viper.GetString("slack.usergroup-prefix")),
-		reconciler.WithDryRun(viper.GetBool("dryrun")),
-		reconciler.WithApplicationType(viper.GetString("governor.application-type")),
+		reconciler.WithInterval(configs.AppConfig.Reconciler.Interval),
+		reconciler.WithUserGroupPrefix(configs.AppConfig.Slack.UsergroupPrefix),
+		reconciler.WithDryRun(configs.AppConfig.DryRun),
+		reconciler.WithApplicationType(configs.AppConfig.Governor.ApplicationType),
 	)
 
-	if viper.GetBool("reconciler.locking") {
+	if configs.AppConfig.Reconciler.Locking {
 		locker, err := newNATSLocker(nc)
 		if err != nil {
 			logger.Warnw("failed to initialize NATS locker", "error", err)
@@ -186,25 +157,43 @@ func serve(cmdCtx context.Context, _ *viper.Viper) error {
 		}
 	}
 
-	server := &natssrv.Server{
-		Debug:           viper.GetBool("logging.debug"),
-		Listen:          viper.GetString("listen"),
-		Logger:          logger.Desugar(),
-		AuditFileWriter: auf,
-		NATSClient:      natsClient,
-		Reconciler:      rec,
-	}
+	proc := natssrv.NewProcessor(
+		rec,
+		natssrv.WithLogger(logger.Desugar().With(zap.String("component", "events-processor"))),
+		natssrv.WithTracer(tracer),
+	)
+
+	// gov-slack-addon is a conventional (non-interactive) governor addon that
+	// only processes events, so no extension ID or ERDs are registered.
+	server := extserver.NewServer(
+		configs.AppConfig.Server.Listen,
+		"", // extensionID
+		"", // erdDir
+		extserver.WithEventProcessor(proc),
+		extserver.WithAuditFileWriter(auf),
+		extserver.WithLogger(logger.Desugar()),
+		extserver.WithDebug(configs.AppConfig.Logging.Debug),
+		extserver.WithGovernorClient(gc),
+		extserver.WithNATSClient(natsClient),
+		extserver.WithTracer(tracer),
+	)
 
 	logger.Infow("starting server",
-		"address", viper.GetString("listen"),
-		"governor-url", viper.GetString("governor.url"),
-		"slack-usergroup-prefix", viper.GetString("slack.usergroup-prefix"),
-		"dryrun", viper.GetBool("dryrun"),
+		"address", configs.AppConfig.Server.Listen,
+		"governor-url", configs.AppConfig.Governor.URL,
+		"slack-usergroup-prefix", configs.AppConfig.Slack.UsergroupPrefix,
+		"dryrun", configs.AppConfig.DryRun,
 	)
+
+	// the SDK event router only handles event-driven reconciliation, so run the
+	// periodic reconciler loop alongside it
+	go rec.Run(ctx)
 
 	if err := server.Run(ctx); err != nil {
 		logger.Fatalw("failed starting server", "error", err)
 	}
+
+	rec.Stop()
 
 	return nil
 }
@@ -219,7 +208,7 @@ func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
 	const timePastInterval = 10 * time.Second
 
 	bucketName := appName + "-lock"
-	ttl := viper.GetDuration("reconciler.interval") + timePastInterval
+	ttl := configs.AppConfig.Reconciler.Interval + timePastInterval
 
 	kvStore, err := natslock.NewKeyValue(jets, bucketName, ttl)
 	if err != nil {
@@ -234,34 +223,36 @@ func newNATSLocker(nc *nats.Conn) (*natslock.Locker, error) {
 
 // validateMandatoryFlags collects the mandatory flag validation
 func validateMandatoryFlags() error {
-	if err := appConfig.Validate(); err != nil {
+	if err := configs.AppConfig.Validate(); err != nil {
 		return fmt.Errorf("invalid config: %w", err)
 	}
 
 	errs := []string{}
 
-	if viper.GetString("slack.token") == "" {
+	if configs.AppConfig.Slack.Token == "" {
 		errs = append(errs, ErrSlackTokenRequired.Error())
 	}
 
-	if viper.GetString("governor.url") == "" {
+	if configs.AppConfig.Governor.URL == "" {
 		errs = append(errs, ErrGovernorURLRequired.Error())
 	}
 
-	if viper.GetString("governor.client-id") == "" {
-		errs = append(errs, ErrGovernorClientIDRequired.Error())
-	}
+	if !configs.AppConfig.Governor.WorkloadIdentity {
+		if configs.AppConfig.Governor.ClientID == "" {
+			errs = append(errs, ErrGovernorClientIDRequired.Error())
+		}
 
-	if viper.GetString("governor.client-secret") == "" {
-		errs = append(errs, ErrGovernorClientSecretRequired.Error())
-	}
+		if configs.AppConfig.Governor.ClientSecret == "" {
+			errs = append(errs, ErrGovernorClientSecretRequired.Error())
+		}
 
-	if viper.GetString("governor.token-url") == "" {
-		errs = append(errs, ErrGovernorClientTokenURLRequired.Error())
-	}
+		if configs.AppConfig.Governor.TokenURL == "" {
+			errs = append(errs, ErrGovernorClientTokenURLRequired.Error())
+		}
 
-	if viper.GetString("governor.audience") == "" {
-		errs = append(errs, ErrGovernorClientAudienceRequired.Error())
+		if configs.AppConfig.Governor.Audience == "" {
+			errs = append(errs, ErrGovernorClientAudienceRequired.Error())
+		}
 	}
 
 	if len(errs) == 0 {
