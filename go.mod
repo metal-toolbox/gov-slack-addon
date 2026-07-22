@@ -4,6 +4,7 @@ go 1.26.5
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
+	github.com/avast/retry-go/v5 v5.0.0
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/metal-toolbox/auditevent v0.9.0
 	github.com/metal-toolbox/governor-api v0.14.0
