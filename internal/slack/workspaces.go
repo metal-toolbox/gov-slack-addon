@@ -20,7 +20,7 @@ func (c *Client) ListWorkspaces(ctx context.Context) ([]slack.Team, error) {
 
 	teams, _, err := c.slackService.ListTeamsContext(ctx, opts)
 	if err != nil {
-		return nil, err
+		return nil, apiError("list workspaces", err)
 	}
 
 	c.logger.Debug("returning slack workspaces", zap.Any("slack.workspaces", teams))

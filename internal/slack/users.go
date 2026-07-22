@@ -39,7 +39,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*slack.User, error) {
 			return nil, ErrSlackUserNotFound
 		}
 
-		return nil, err
+		return nil, apiError("get user by id", err)
 	}
 
 	c.logger.Debug("returning slack user info", zap.Any("slack.user", user))
@@ -77,7 +77,7 @@ func (c *Client) GetUserByEmail(ctx context.Context, email string) (*slack.User,
 			return nil, ErrSlackUserNotFound
 		}
 
-		return nil, err
+		return nil, apiError("get user by email", err)
 	}
 
 	c.logger.Debug("returning slack user info", zap.Any("slack.user", user))
