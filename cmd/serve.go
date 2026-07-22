@@ -66,8 +66,8 @@ func serve(cmdCtx context.Context) error {
 
 	go func() {
 		<-c
-		cancel()
 		logger.Debug("received shutdown signal, cancel called")
+		cancel()
 	}()
 
 	tp, traceShutdown, err := configs.AppConfig.Tracing.InitTracing(ctx, appName)
