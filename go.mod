@@ -10,7 +10,7 @@ require (
 	github.com/metal-toolbox/governor-extension-sdk v0.5.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/nats-io/nats-server/v2 v2.14.3
-	github.com/nats-io/nats.go v1.52.0
+	github.com/nats-io/nats.go v1.53.1
 	github.com/slack-go/slack v0.27.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
