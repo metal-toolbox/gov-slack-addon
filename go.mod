@@ -4,6 +4,7 @@ go 1.26.5
 
 require (
 	github.com/avast/retry-go/v4 v4.7.0
+	github.com/avast/retry-go/v5 v5.1.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/metal-toolbox/auditevent v0.9.0
 	github.com/metal-toolbox/governor-api v0.14.0
@@ -112,7 +113,7 @@ require (
 	github.com/sirupsen/logrus v1.9.4 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/stretchr/testify v1.12.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.1 // indirect
@@ -128,7 +129,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/arch v0.28.0 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976 // indirect
